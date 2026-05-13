@@ -31,8 +31,8 @@ export interface Lead {
   followUpDate?: string;
   createdAt: string;
   updatedAt: string;
-  notesHistory?: Note[]; // Still compatible with old UI
-  statusHistory?: StatusChange[]; // Still compatible with old UI
+  notesHistory?: Note[];
+  statusHistory?: StatusChange[];
 }
 
 export interface Activity {

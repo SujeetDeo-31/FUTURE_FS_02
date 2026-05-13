@@ -16,9 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
-  CheckCircle2,
-  AlertCircle,
-  X
+  X,
+  AlertCircle
 } from "lucide-react";
 import { 
   Table, 
@@ -57,7 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { MOCK_LEADS, LeadStatus, LeadPriority } from "@/lib/mock-data";
+import { LeadStatus, LeadPriority, Lead } from "@/types/crm";
 import { cn } from "@/lib/utils";
 
 const statusColors: Record<LeadStatus, string> = {
@@ -77,6 +76,8 @@ const priorityColors: Record<LeadPriority, string> = {
 
 export default function LeadsPage() {
   const { toast } = useToast();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -86,14 +87,31 @@ export default function LeadsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Debounce search term
+  const fetchLeads = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/leads');
+      if (!response.ok) throw new Error('Failed to fetch leads');
+      const data = await response.json();
+      setLeads(data);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const filteredLeads = useMemo(() => {
-    return MOCK_LEADS.filter(lead => {
+    return leads.filter(lead => {
       const matchesSearch = 
         lead.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         lead.company.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
@@ -104,7 +122,7 @@ export default function LeadsPage() {
 
       return matchesSearch && matchesStatus && matchesPriority;
     });
-  }, [debouncedSearch, statusFilter, priorityFilter]);
+  }, [leads, debouncedSearch, statusFilter, priorityFilter]);
 
   const paginatedLeads = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -117,7 +135,7 @@ export default function LeadsPage() {
     if (selectedLeads.length === paginatedLeads.length) {
       setSelectedLeads([]);
     } else {
-      setSelectedLeads(paginatedLeads.map(l => l.id));
+      setSelectedLeads(paginatedLeads.map(l => l._id || l.id));
     }
   };
 
@@ -127,21 +145,18 @@ export default function LeadsPage() {
     );
   };
 
-  const handleBulkDelete = () => {
-    toast({
-      title: "Action Successful",
-      description: `Deleted ${selectedLeads.length} leads successfully.`,
-    });
-    setSelectedLeads([]);
-    setIsDeleteDialogOpen(false);
-  };
-
-  const handleBulkStatusChange = (status: LeadStatus) => {
-    toast({
-      title: "Status Updated",
-      description: `Updated status for ${selectedLeads.length} leads to ${status}.`,
-    });
-    setSelectedLeads([]);
+  const handleBulkDelete = async () => {
+    try {
+      for (const id of selectedLeads) {
+        await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+      }
+      toast({ title: "Success", description: `Deleted ${selectedLeads.length} leads.` });
+      fetchLeads();
+      setSelectedLeads([]);
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      toast({ title: "Error", description: "Bulk delete failed.", variant: "destructive" });
+    }
   };
 
   return (
@@ -156,7 +171,6 @@ export default function LeadsPage() {
         </Button>
       </header>
 
-      {/* Control Bar */}
       <div className="space-y-4">
         <div className="flex flex-col lg:flex-row items-center gap-4">
           <div className="relative flex-1 w-full group">
@@ -214,7 +228,6 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        {/* Bulk Actions Bar */}
         <AnimatePresence>
           {selectedLeads.length > 0 && (
             <motion.div 
@@ -226,23 +239,6 @@ export default function LeadsPage() {
               <div className="flex items-center justify-between px-6 py-3 bg-primary/10 border border-primary/20 rounded-xl backdrop-blur-md">
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-bold text-primary">{selectedLeads.length} leads selected</span>
-                  <div className="h-4 w-px bg-primary/20" />
-                  <div className="flex items-center gap-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="sm" variant="ghost" className="text-xs font-bold gap-2 text-primary hover:bg-primary/10 h-8">
-                          Change Status <ChevronRight className="w-3 h-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-popover/95 backdrop-blur-xl border-white/10">
-                        {["New", "Contacted", "Qualified", "Proposal Sent", "Converted", "Lost"].map((s) => (
-                          <DropdownMenuItem key={s} onClick={() => handleBulkStatusChange(s as LeadStatus)} className="text-xs">
-                            Mark as {s}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
                 </div>
                 <Button 
                   size="sm" 
@@ -258,7 +254,6 @@ export default function LeadsPage() {
         </AnimatePresence>
       </div>
 
-      {/* Table Section */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl shadow-2xl relative">
         <div className="overflow-auto max-h-[600px] no-scrollbar rounded-2xl">
           <Table>
@@ -281,9 +276,15 @@ export default function LeadsPage() {
             </TableHeader>
             <TableBody>
               <AnimatePresence mode="popLayout">
-                {paginatedLeads.map((lead, idx) => (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-20 text-muted-foreground animate-pulse">
+                      Loading pipeline data...
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedLeads.map((lead, idx) => (
                   <motion.tr 
-                    key={lead.id} 
+                    key={lead._id || lead.id} 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -292,15 +293,15 @@ export default function LeadsPage() {
                   >
                     <TableCell className="py-4 pl-6">
                       <Checkbox 
-                        checked={selectedLeads.includes(lead.id)}
-                        onCheckedChange={() => toggleSelectLead(lead.id)}
+                        checked={selectedLeads.includes(lead._id || lead.id)}
+                        onCheckedChange={() => toggleSelectLead(lead._id || lead.id)}
                         className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                     </TableCell>
                     <TableCell className="py-4">
                       <div className="flex flex-col">
                         <span className="font-bold text-sm text-white group-hover:text-primary transition-colors cursor-pointer">
-                          <Link href={`/leads/${lead.id}`}>{lead.name}</Link>
+                          <Link href={`/leads/${lead._id || lead.id}`}>{lead.name}</Link>
                         </span>
                         <span className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
                           <Mail className="w-2.5 h-2.5 opacity-50" /> {lead.email}
@@ -326,37 +327,18 @@ export default function LeadsPage() {
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-white/10 to-transparent flex items-center justify-center text-[10px] font-bold text-primary ring-1 ring-white/10 shadow-inner">
-                          {lead.assignedTo.charAt(0)}
+                          {lead.assignedTo?.charAt(0) || 'U'}
                         </div>
-                        <span className="text-xs font-medium text-white/70">{lead.assignedTo}</span>
+                        <span className="text-xs font-medium text-white/70">{lead.assignedTo || 'Unassigned'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-6">
                       <div className="flex items-center justify-end gap-1.5">
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all" asChild>
-                          <Link href={`/leads/${lead.id}`}>
+                          <Link href={`/leads/${lead._id || lead.id}`}>
                             <ExternalLink className="w-4 h-4" />
                           </Link>
                         </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-white hover:bg-white/10 rounded-xl transition-all">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-popover/95 backdrop-blur-xl border-white/10 p-1.5">
-                            <DropdownMenuItem className="text-xs rounded-lg focus:bg-primary/10 focus:text-primary py-2 cursor-pointer gap-2">
-                              <Zap className="w-3.5 h-3.5" /> Quick Action
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs rounded-lg focus:bg-primary/10 focus:text-primary py-2 cursor-pointer gap-2">
-                              <Mail className="w-3.5 h-3.5" /> Send Message
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-white/5 mx-1" />
-                            <DropdownMenuItem className="text-xs rounded-lg text-red-400 focus:bg-red-400/10 focus:text-red-400 py-2 cursor-pointer gap-2">
-                              <Trash2 className="w-3.5 h-3.5" /> Remove Lead
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </motion.tr>
@@ -366,8 +348,7 @@ export default function LeadsPage() {
           </Table>
         </div>
 
-        {/* Empty State */}
-        {paginatedLeads.length === 0 && (
+        {paginatedLeads.length === 0 && !loading && (
           <div className="py-32 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/10 mb-6 shadow-inner">
               <AlertCircle className="w-8 h-8 text-muted-foreground/30" />
@@ -376,17 +357,9 @@ export default function LeadsPage() {
             <p className="text-muted-foreground text-sm mt-2 max-w-[280px] mx-auto leading-relaxed">
               We couldn't find any leads matching your current search criteria.
             </p>
-            <Button variant="ghost" className="mt-6 text-primary font-bold hover:bg-primary/10 h-10 px-6 rounded-xl" onClick={() => {
-              setSearchTerm("");
-              setStatusFilter("all");
-              setPriorityFilter("all");
-            }}>
-              Clear All Filters
-            </Button>
           </div>
         )}
 
-        {/* Pagination */}
         {filteredLeads.length > 0 && (
           <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
             <p className="text-xs text-muted-foreground">
@@ -428,14 +401,12 @@ export default function LeadsPage() {
         )}
       </div>
 
-      {/* Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent className="bg-popover/95 backdrop-blur-2xl border-white/10 rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold font-headline">Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
-              This will permanently delete <span className="text-white font-bold">{selectedLeads.length}</span> selected leads. 
-              This action cannot be undone and will remove all associated notes and history.
+              This will permanently delete <span className="text-white font-bold">{selectedLeads.length}</span> selected leads.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3 mt-6">

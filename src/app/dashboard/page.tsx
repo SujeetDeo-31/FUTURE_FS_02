@@ -1,4 +1,3 @@
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -8,12 +7,10 @@ import {
   Clock, 
   ArrowUpRight, 
   Zap,
-  TrendingUp,
-  ChevronRight,
-  Filter,
   MoreVertical,
-  Activity,
-  Database
+  Database,
+  Filter,
+  ChevronRight
 } from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,19 +30,20 @@ import {
 import { GlassCard } from "@/components/shared/glass-card";
 import { useCRMStats } from "@/hooks/use-crm-stats";
 import { LeadService } from "@/services/lead-service";
-import { useFirestore } from "@/firebase";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 const COLORS = ["#8b5cf6", "#a78bfa", "#6366f1", "#4f46e5", "#3b82f6", "#10b981"];
 
 export default function DashboardPage() {
-  const { stats, leads, loading } = useCRMStats();
-  const db = useFirestore();
+  const { stats, leads, loading, refresh } = useCRMStats();
 
-  const handleSeedData = () => {
-    if (!db) return;
-    LeadService.seedSampleData(db);
+  const handleSeedData = async () => {
+    try {
+      await LeadService.seedSampleData();
+      refresh();
+    } catch (error) {
+      console.error("Seeding failed", error);
+    }
   };
 
   if (loading) {
@@ -61,7 +59,7 @@ export default function DashboardPage() {
 
   const dashboardStats = [
     { label: "Total Leads", value: stats?.totalLeads || 0, change: "+12.5%", icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
-    { label: "Conversion", value: `${stats?.conversionRate.toFixed(1)}%`, change: "+2.4%", icon: Target, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+    { label: "Conversion", value: `${stats?.conversionRate?.toFixed(1)}%`, change: "+2.4%", icon: Target, color: "text-emerald-400", bg: "bg-emerald-400/10" },
     { label: "Qualified", value: stats?.statusBreakdown['Qualified'] || 0, change: "+18%", icon: Zap, color: "text-violet-400", bg: "bg-violet-400/10" },
     { label: "Overdue Follow-ups", value: stats?.followUpsDueCount || 0, change: "-2%", icon: Clock, color: "text-amber-400", bg: "bg-amber-400/10" },
   ];
@@ -88,7 +86,6 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {dashboardStats.map((stat, idx) => (
           <GlassCard key={stat.label} delay={idx * 0.05}>
@@ -112,7 +109,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Growth Chart */}
         <div className="lg:col-span-2">
           <GlassCard>
             <CardHeader className="flex flex-row items-center justify-between pb-8">
@@ -168,7 +164,6 @@ export default function DashboardPage() {
           </GlassCard>
         </div>
 
-        {/* Source Distribution */}
         <div>
           <GlassCard className="h-full">
             <CardHeader className="pb-4">
@@ -217,7 +212,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-10">
-        {/* Recent Activity */}
         <GlassCard>
           <CardHeader className="flex flex-row items-center justify-between mb-2">
             <div>
@@ -232,7 +226,7 @@ export default function DashboardPage() {
             <div className="space-y-1">
               {leads?.slice(0, 5).map((lead, idx) => (
                 <motion.div 
-                  key={lead.id} 
+                  key={lead._id || lead.id} 
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * idx }}
@@ -265,7 +259,6 @@ export default function DashboardPage() {
           </CardContent>
         </GlassCard>
 
-        {/* Priority Queue */}
         <GlassCard>
           <CardHeader className="mb-2">
             <CardTitle className="font-headline text-xl text-white">Priority Queue</CardTitle>
@@ -274,7 +267,7 @@ export default function DashboardPage() {
           <CardContent className="space-y-4">
             {leads?.filter(l => l.priority === 'High' && l.status !== 'Converted').slice(0, 3).map((lead, idx) => (
               <motion.div 
-                key={lead.id}
+                key={lead._id || lead.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * idx }}
@@ -294,7 +287,7 @@ export default function DashboardPage() {
                     HIGH
                   </Badge>
                   <Button variant="ghost" size="icon" className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all" asChild>
-                    <Link href={`/leads/${lead.id}`}>
+                    <Link href={`/leads/${lead._id || lead.id}`}>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                   </Button>

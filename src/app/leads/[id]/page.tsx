@@ -1,4 +1,3 @@
-
 "use client";
 
 import { use, useState, useEffect } from "react";
@@ -22,8 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { MOCK_LEADS, Lead, LeadStatus, LeadPriority } from "@/lib/mock-data";
+import { LeadStatus, Lead } from "@/types/crm";
 import { aiNextActionSuggestion, AiNextActionSuggestionOutput } from "@/ai/flows/ai-next-action-suggestion";
 
 const statusColors: Record<LeadStatus, string> = {
@@ -38,12 +36,24 @@ const statusColors: Record<LeadStatus, string> = {
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [lead, setLead] = useState<Lead | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<AiNextActionSuggestionOutput | null>(null);
 
   useEffect(() => {
-    const found = MOCK_LEADS.find(l => l.id === id);
-    if (found) setLead(found);
+    const fetchLead = async () => {
+      try {
+        const response = await fetch(`/api/leads/${id}`);
+        if (!response.ok) throw new Error('Lead not found');
+        const data = await response.json();
+        setLead(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLead();
   }, [id]);
 
   const generateAiNextAction = async () => {
@@ -58,7 +68,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         source: lead.source,
         status: lead.status as any,
         priority: lead.priority as any,
-        notesHistory: lead.notesHistory.map(n => ({ timestamp: n.timestamp, note: n.content })),
+        notesHistory: lead.notesHistory?.map(n => ({ timestamp: n.timestamp, note: n.content })) || [],
         createdAt: lead.createdAt,
       });
       setAiSuggestion(result);
@@ -69,7 +79,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     }
   };
 
-  if (!lead) return <div className="p-8 text-center">Loading lead data...</div>;
+  if (loading) return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading lead data...</div>;
+  if (!lead) return <div className="p-8 text-center">Lead not found.</div>;
 
   return (
     <div className="space-y-6 pb-20">
@@ -101,7 +112,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          {/* Main Info Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="bg-card/50 border-border">
               <CardContent className="p-4 space-y-4">
@@ -134,7 +144,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Follow-up Date</p>
-                    <p className="text-sm font-semibold">{lead.followUpDate || 'None scheduled'}</p>
+                    <p className="text-sm font-semibold">{lead.followUpDate ? new Date(lead.followUpDate).toLocaleDateString() : 'None scheduled'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -164,16 +174,15 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               <Card className="bg-card/30 border-border">
                 <CardContent className="p-6">
                   <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary before:via-border before:to-transparent">
-                    {lead.statusHistory.map((status, idx) => (
+                    {lead.statusHistory?.map((status, idx) => (
                       <div key={idx} className="relative flex items-center justify-between gap-6">
                         <div className="flex items-center gap-6">
                           <div className="relative z-10 w-10 h-10 rounded-full bg-background border-2 border-primary flex items-center justify-center">
-                            <TrendingUpIcon className="w-4 h-4 text-primary" />
+                            <ChevronRight className="w-4 h-4 text-primary" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-semibold">Status Update</span>
-                              <Badge variant="outline" className="text-[10px] px-1.5 h-4 border-primary/20 text-primary">System</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">
                               Status changed from <span className="text-foreground font-medium">'{status.oldStatus}'</span> to <span className="text-foreground font-medium">'{status.newStatus}'</span>
@@ -185,7 +194,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                         </span>
                       </div>
                     ))}
-                    {lead.notesHistory.map((note, idx) => (
+                    {lead.notesHistory?.map((note, idx) => (
                       <div key={`note-${idx}`} className="relative flex items-center justify-between gap-6">
                         <div className="flex items-center gap-6">
                           <div className="relative z-10 w-10 h-10 rounded-full bg-background border-2 border-accent flex items-center justify-center">
@@ -194,7 +203,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-semibold">Note Added</span>
-                              <Badge variant="outline" className="text-[10px] px-1.5 h-4 border-accent/20 text-accent-foreground">User</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">{note.content}</p>
                           </div>
@@ -230,7 +238,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         </div>
 
         <div className="space-y-6">
-          {/* AI Suggestions Card */}
           <Card className="bg-gradient-to-br from-primary/20 to-accent/10 border-primary/20 shadow-lg shadow-primary/5">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -280,7 +287,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
           <Card className="bg-card/50 border-border">
             <CardHeader>
               <CardTitle className="text-lg font-headline">Quick Actions</CardTitle>
@@ -300,25 +306,5 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
     </div>
-  );
-}
-
-function TrendingUpIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-      <polyline points="16 7 22 7 22 13" />
-    </svg>
   );
 }

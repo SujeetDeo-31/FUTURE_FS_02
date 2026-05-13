@@ -1,24 +1,34 @@
-
 'use client';
 
-import { useMemo } from 'react';
-import { useCollection } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useState, useEffect, useMemo } from 'react';
 import { Lead, LeadStatus, CRMStats } from '@/types/crm';
-import { startOfMonth, format, subMonths, isAfter, parseISO } from 'date-fns';
+import { format, subMonths, isAfter, parseISO } from 'date-fns';
 
 export function useCRMStats() {
-  const firestore = useFirestore();
-  const leadsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'leads'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: leads, loading, error } = useCollection<Lead>(leadsQuery);
+  const fetchLeads = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/leads');
+      if (!response.ok) throw new Error('Failed to fetch leads');
+      const data = await response.json();
+      setLeads(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
 
   const stats = useMemo(() => {
-    if (!leads) return null;
+    if (!leads.length) return null;
 
     const statusBreakdown: Record<LeadStatus, number> = {
       New: 0,
@@ -34,7 +44,6 @@ export function useCRMStats() {
     let followUpsDueCount = 0;
     const now = new Date();
 
-    // Growth and Monthly Trends
     const monthlyGrowth: Record<string, { month: string; leads: number; active: number }> = {};
     for (let i = 5; i >= 0; i--) {
       const monthDate = subMonths(now, i);
@@ -43,21 +52,17 @@ export function useCRMStats() {
     }
 
     leads.forEach((lead) => {
-      // Basic counts
       if (lead.status in statusBreakdown) {
         statusBreakdown[lead.status]++;
       }
       if (lead.status === 'Converted') convertedCount++;
       
-      // Source breakdown
       sourceBreakdown[lead.source] = (sourceBreakdown[lead.source] || 0) + 1;
 
-      // Follow-ups
       if (lead.followUpDate && isAfter(now, parseISO(lead.followUpDate)) && lead.status !== 'Converted' && lead.status !== 'Lost') {
         followUpsDueCount++;
       }
 
-      // Growth mapping
       const createdDate = parseISO(lead.createdAt);
       const monthName = format(createdDate, 'MMM');
       if (monthlyGrowth[monthName]) {
@@ -81,5 +86,5 @@ export function useCRMStats() {
     };
   }, [leads]);
 
-  return { stats, leads, loading, error };
+  return { stats, leads, loading, error, refresh: fetchLeads };
 }
