@@ -17,7 +17,15 @@ export async function GET(request: Request) {
     const leads = await Lead.find(query).sort({ createdAt: -1 });
     return NextResponse.json(leads);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("API /api/leads error:", error);
+  
+    return NextResponse.json(
+      {
+        error: error.message,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -37,6 +45,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json(lead, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("API /api/leads error:", error);
+  
+    return NextResponse.json(
+      {
+        error: error.message,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
