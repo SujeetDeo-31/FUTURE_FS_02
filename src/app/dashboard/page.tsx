@@ -1,3 +1,4 @@
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -11,7 +12,8 @@ import {
   ChevronRight,
   Filter,
   MoreVertical,
-  Activity
+  Activity,
+  Database
 } from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,35 +30,42 @@ import {
   CartesianGrid,
   Tooltip
 } from "recharts";
-import { MOCK_ACTIVITY } from "@/lib/mock-data";
 import { GlassCard } from "@/components/shared/glass-card";
+import { useCRMStats } from "@/hooks/use-crm-stats";
+import { LeadService } from "@/services/lead-service";
+import { useFirestore } from "@/firebase";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 
-const stats = [
-  { label: "Total Leads", value: "1,284", change: "+12.5%", icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
-  { label: "Conversion", value: "33.6%", change: "+2.4%", icon: Target, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  { label: "Hot Leads", value: "48", change: "+18%", icon: Zap, color: "text-violet-400", bg: "bg-violet-400/10" },
-  { label: "Queue", value: "12", change: "-2%", icon: Clock, color: "text-amber-400", bg: "bg-amber-400/10" },
-];
-
-const sourceData = [
-  { name: "Website", value: 400 },
-  { name: "Referral", value: 300 },
-  { name: "LinkedIn", value: 200 },
-  { name: "Direct", value: 150 },
-];
-
-const COLORS = ["#8b5cf6", "#a78bfa", "#6366f1", "#4f46e5"];
-
-const growthData = [
-  { month: "Jan", leads: 65, active: 40 },
-  { month: "Feb", leads: 85, active: 55 },
-  { month: "Mar", leads: 110, active: 70 },
-  { month: "Apr", leads: 95, active: 65 },
-  { month: "May", leads: 140, active: 90 },
-  { month: "Jun", leads: 175, active: 110 },
-];
+const COLORS = ["#8b5cf6", "#a78bfa", "#6366f1", "#4f46e5", "#3b82f6", "#10b981"];
 
 export default function DashboardPage() {
+  const { stats, leads, loading } = useCRMStats();
+  const db = useFirestore();
+
+  const handleSeedData = () => {
+    if (!db) return;
+    LeadService.seedSampleData(db);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground font-medium animate-pulse">Syncing pipeline intelligence...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const dashboardStats = [
+    { label: "Total Leads", value: stats?.totalLeads || 0, change: "+12.5%", icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
+    { label: "Conversion", value: `${stats?.conversionRate.toFixed(1)}%`, change: "+2.4%", icon: Target, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+    { label: "Qualified", value: stats?.statusBreakdown['Qualified'] || 0, change: "+18%", icon: Zap, color: "text-violet-400", bg: "bg-violet-400/10" },
+    { label: "Overdue Follow-ups", value: stats?.followUpsDueCount || 0, change: "-2%", icon: Clock, color: "text-amber-400", bg: "bg-amber-400/10" },
+  ];
+
   return (
     <div className="space-y-12">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -65,6 +74,11 @@ export default function DashboardPage() {
           <p className="text-muted-foreground mt-1.5 text-base">Real-time intelligence for your sales pipeline.</p>
         </div>
         <div className="flex items-center gap-3">
+          {(!leads || leads.length === 0) && (
+            <Button onClick={handleSeedData} variant="outline" className="border-primary/20 hover:bg-primary/5 text-primary gap-2">
+              <Database className="w-4 h-4" /> Seed Sample Data
+            </Button>
+          )}
           <Button variant="outline" className="h-10 px-4 border-white/10 hover:bg-white/5 bg-transparent text-sm font-semibold">
             <Filter className="w-3.5 h-3.5 mr-2 opacity-50" /> 30 Days
           </Button>
@@ -76,7 +90,7 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, idx) => (
+        {dashboardStats.map((stat, idx) => (
           <GlassCard key={stat.label} delay={idx * 0.05}>
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -112,7 +126,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="h-[340px] px-2">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={growthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={stats?.growthData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.15}/>
@@ -166,7 +180,7 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={sourceData}
+                      data={stats?.sourceData || []}
                       cx="50%"
                       cy="50%"
                       innerRadius={68}
@@ -175,22 +189,22 @@ export default function DashboardPage() {
                       dataKey="value"
                       stroke="none"
                     >
-                      {sourceData.map((entry, index) => (
+                      {(stats?.sourceData || []).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-bold text-white tracking-tighter">1,205</span>
+                  <span className="text-2xl font-bold text-white tracking-tighter">{stats?.totalLeads || 0}</span>
                   <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Total</span>
                 </div>
               </div>
               <div className="w-full space-y-3 px-4">
-                {sourceData.map((source, idx) => (
+                {(stats?.sourceData || []).map((source, idx) => (
                   <div key={source.name} className="flex items-center justify-between group cursor-pointer">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx] }} />
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
                       <span className="text-xs font-semibold text-muted-foreground group-hover:text-white transition-colors">{source.name}</span>
                     </div>
                     <span className="text-xs font-bold text-white">{source.value}</span>
@@ -207,18 +221,18 @@ export default function DashboardPage() {
         <GlassCard>
           <CardHeader className="flex flex-row items-center justify-between mb-2">
             <div>
-              <CardTitle className="font-headline text-xl text-white">Live Activity</CardTitle>
-              <CardDescription>Latest updates from your team</CardDescription>
+              <CardTitle className="font-headline text-xl text-white">Latest Leads</CardTitle>
+              <CardDescription>Recently added contacts in the pipeline</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/10 transition-all rounded-lg">
-              History
+            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/10 transition-all rounded-lg" asChild>
+              <Link href="/leads">View All</Link>
             </Button>
           </CardHeader>
           <CardContent className="px-6">
             <div className="space-y-1">
-              {MOCK_ACTIVITY.map((activity, idx) => (
+              {leads?.slice(0, 5).map((lead, idx) => (
                 <motion.div 
-                  key={activity.id} 
+                  key={lead.id} 
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * idx }}
@@ -226,22 +240,27 @@ export default function DashboardPage() {
                 >
                   <div className="shrink-0">
                     <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/40 transition-all shadow-inner">
-                      {activity.type === 'note' && <Clock className="w-4 h-4 text-blue-400" />}
-                      {activity.type === 'status' && <Activity className="w-4 h-4 text-emerald-400" />}
-                      {activity.type === 'lead' && <Users className="w-4 h-4 text-violet-400" />}
+                      <Users className="w-4 h-4 text-violet-400" />
                     </div>
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-bold text-white truncate">{activity.leadName}</span>
-                      <span className="text-[10px] text-muted-foreground font-medium">{activity.timestamp}</span>
+                      <span className="text-sm font-bold text-white truncate">{lead.name}</span>
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        {new Date(lead.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-normal line-clamp-1 group-hover:text-white/70 transition-colors">
-                      {activity.content}
+                      {lead.company} • {lead.status}
                     </p>
                   </div>
                 </motion.div>
               ))}
+              {(!leads || leads.length === 0) && (
+                <div className="py-12 text-center text-muted-foreground">
+                  No active leads found.
+                </div>
+              )}
             </div>
           </CardContent>
         </GlassCard>
@@ -250,16 +269,12 @@ export default function DashboardPage() {
         <GlassCard>
           <CardHeader className="mb-2">
             <CardTitle className="font-headline text-xl text-white">Priority Queue</CardTitle>
-            <CardDescription>Actions requiring immediate attention</CardDescription>
+            <CardDescription>High priority leads requiring attention</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {[
-              { id: 1, name: "Sarah Jenkins", task: "Review Proposal", priority: "High", time: "14:00" },
-              { id: 2, name: "Michael Chen", task: "Follow-up Call", priority: "Medium", time: "15:30" },
-              { id: 3, name: "Elena Rodriguez", task: "Setup Demo", priority: "High", time: "16:45" },
-            ].map((item, idx) => (
+            {leads?.filter(l => l.priority === 'High' && l.status !== 'Converted').slice(0, 3).map((lead, idx) => (
               <motion.div 
-                key={item.id}
+                key={lead.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * idx }}
@@ -267,28 +282,27 @@ export default function DashboardPage() {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-primary/10">
-                    {item.name.charAt(0)}
+                    {lead.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white leading-tight">{item.task}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{item.name} • {item.time}</p>
+                    <p className="text-sm font-bold text-white leading-tight">{lead.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{lead.company} • {lead.status}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline" className={cn(
-                    "text-[9px] font-bold px-1.5 py-0 border-none rounded-sm",
-                    item.priority === "High" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400"
-                  )}>
-                    {item.priority}
+                  <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 border-none rounded-sm bg-red-500/10 text-red-400">
+                    HIGH
                   </Badge>
-                  <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-white" />
-                  </div>
+                  <Button variant="ghost" size="icon" className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all" asChild>
+                    <Link href={`/leads/${lead.id}`}>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </Button>
                 </div>
               </motion.div>
             ))}
-            <Button variant="ghost" className="w-full h-10 mt-2 border-dashed border border-white/10 hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary font-bold text-xs uppercase tracking-widest">
-              + View All Tasks
+            <Button variant="ghost" className="w-full h-10 mt-2 border-dashed border border-white/10 hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary font-bold text-xs uppercase tracking-widest" asChild>
+              <Link href="/leads">+ View All Leads</Link>
             </Button>
           </CardContent>
         </GlassCard>
