@@ -1,11 +1,12 @@
-
 export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Proposal Sent' | 'Converted' | 'Lost';
 export type LeadPriority = 'Low' | 'Medium' | 'High';
 
 export interface Note {
   id: string;
+  _id?: string;
   content: string;
   timestamp: string;
+  createdAt?: string;
   authorName: string;
 }
 
@@ -17,6 +18,7 @@ export interface StatusChange {
 
 export interface Lead {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   phone: string;
@@ -29,16 +31,18 @@ export interface Lead {
   followUpDate?: string;
   createdAt: string;
   updatedAt: string;
-  notesHistory: Note[];
-  statusHistory: StatusChange[];
+  notesHistory?: Note[]; // Still compatible with old UI
+  statusHistory?: StatusChange[]; // Still compatible with old UI
 }
 
 export interface Activity {
   id: string;
+  _id?: string;
   type: 'note' | 'status' | 'lead' | 'followup';
   leadName: string;
   content: string;
   timestamp: string;
+  createdAt?: string;
 }
 
 export interface CRMStats {
@@ -48,4 +52,7 @@ export interface CRMStats {
   followUpsDueCount: number;
   statusBreakdown: Record<LeadStatus, number>;
   sourceBreakdown: Record<string, number>;
+  sourceData?: { name: string; value: number }[];
+  growthData?: { month: string; leads: number; active: number }[];
+  conversionRate?: number;
 }
