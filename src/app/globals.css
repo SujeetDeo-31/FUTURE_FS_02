@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,8 +23,8 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 263.4 70% 50.4%;
-    --radius: 1rem;
-    --sidebar-background: 240 10% 2.9%;
+    --radius: 0.75rem;
+    --sidebar-background: 240 10% 2.5%;
     --sidebar-foreground: 240 5% 84.9%;
     --sidebar-primary: 263.4 70% 50.4%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -49,9 +48,17 @@
 }
 
 .glass-morphism {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+  @apply bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] shadow-2xl;
 }
 
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-violet-400 to-accent;
+  @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/40;
+}
+
+.premium-shadow {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar-item-active {
+  @apply bg-primary/10 text-primary ring-1 ring-inset ring-primary/20;
 }
