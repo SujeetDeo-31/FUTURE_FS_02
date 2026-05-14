@@ -10,8 +10,6 @@ import {
   Building2, 
   Mail, 
   Phone, 
-  Globe, 
-  Clock,
   AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,14 +27,22 @@ import { GlassCard } from "@/components/shared/glass-card";
 import { LeadService } from "@/services/lead-service";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { LeadStatus, LeadPriority } from "@/types/crm";
 
 export default function NewLeadPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
+  // Use controlled states for Select components to ensure data integrity
+  const [status, setStatus] = useState<LeadStatus>("New");
+  const [priority, setPriority] = useState<LeadPriority>("Medium");
+  const [source, setSource] = useState("Website");
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (loading) return;
+    
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -45,9 +51,9 @@ export default function NewLeadPage() {
       email: formData.get("email") as string,
       company: formData.get("company") as string,
       phone: formData.get("phone") as string,
-      source: formData.get("source") as string,
-      priority: formData.get("priority") as string,
-      status: formData.get("status") as string,
+      source: source,
+      priority: priority,
+      status: status,
       notes: formData.get("notes") as string,
     };
 
@@ -64,7 +70,6 @@ export default function NewLeadPage() {
         description: error.message || "Failed to create lead. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -134,8 +139,8 @@ export default function NewLeadPage() {
             <GlassCard>
               <div className="p-6 space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pipeline Stage</Label>
-                  <Select name="status" defaultValue="New">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pipeline Stage</Label>
+                  <Select value={status} onValueChange={(v) => setStatus(v as LeadStatus)}>
                     <SelectTrigger className="bg-white/5 border-white/10 h-11">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -149,8 +154,8 @@ export default function NewLeadPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="priority" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Priority Level</Label>
-                  <Select name="priority" defaultValue="Medium">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Priority Level</Label>
+                  <Select value={priority} onValueChange={(v) => setPriority(v as LeadPriority)}>
                     <SelectTrigger className="bg-white/5 border-white/10 h-11">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
@@ -163,8 +168,8 @@ export default function NewLeadPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="source" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Lead Source</Label>
-                  <Select name="source" defaultValue="Website">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Lead Source</Label>
+                  <Select value={source} onValueChange={setSource}>
                     <SelectTrigger className="bg-white/5 border-white/10 h-11">
                       <SelectValue placeholder="Select source" />
                     </SelectTrigger>
@@ -190,7 +195,7 @@ export default function NewLeadPage() {
             <Button 
               type="submit" 
               disabled={loading}
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-2"
+              className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-2 relative z-10"
             >
               {loading ? "Creating..." : <><Save className="w-5 h-5" /> Create Lead</>}
             </Button>
