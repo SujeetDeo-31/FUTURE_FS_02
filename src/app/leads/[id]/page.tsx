@@ -180,16 +180,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="gap-2 border-white/10 hover:bg-white/5" onClick={() => setIsEditDialogOpen(true)}>
-            <PenSquare className="w-4 h-4" /> Edit Lead
-          </Button>
-          <Button 
-            className="bg-primary hover:bg-primary/90 gap-2 shadow-lg shadow-primary/20"
-            onClick={handleAddNote}
-            disabled={!newNote.trim() || isSavingNote}
-          >
-            {isSavingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Activity
+          <Button variant="outline" className="gap-2 border-white/10 hover:bg-white/5 px-6 h-11" onClick={() => setIsEditDialogOpen(true)}>
+            <PenSquare className="w-4 h-4" /> Edit Profile
           </Button>
         </div>
       </div>
@@ -318,12 +310,12 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="flex justify-end gap-3">
                     <Button variant="ghost" onClick={() => setNewNote("")} className="hover:bg-white/5">Clear</Button>
                     <Button 
-                      className="bg-primary hover:bg-primary/90 min-w-[120px]" 
+                      className="bg-primary hover:bg-primary/90 min-w-[140px] h-11" 
                       onClick={handleAddNote}
                       disabled={!newNote.trim() || isSavingNote}
                     >
                       {isSavingNote ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                      Add Entry
+                      Save Entry
                     </Button>
                   </div>
                 </CardContent>
