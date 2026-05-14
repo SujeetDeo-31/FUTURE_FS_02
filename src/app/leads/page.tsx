@@ -49,6 +49,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { LeadStatus, LeadPriority, Lead } from "@/types/crm";
 import { cn } from "@/lib/utils";
+import { BackButton } from "@/components/shared/back-button";
 
 const statusColors: Record<LeadStatus, string> = {
   New: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -151,7 +152,9 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-10">
+      <BackButton />
+      
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-4xl font-bold font-headline tracking-tight text-white">Lead Manager</h1>

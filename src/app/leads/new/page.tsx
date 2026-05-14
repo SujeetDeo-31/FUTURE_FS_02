@@ -3,13 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  ArrowLeft, 
   Save, 
   User, 
   Building2, 
   Mail, 
-  Phone, 
-  AlertCircle
+  Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +23,8 @@ import {
 import { GlassCard } from "@/components/shared/glass-card";
 import { LeadService } from "@/services/lead-service";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
 import { LeadStatus, LeadPriority } from "@/types/crm";
+import { BackButton } from "@/components/shared/back-button";
 
 export default function NewLeadPage() {
   const router = useRouter();
@@ -73,17 +71,12 @@ export default function NewLeadPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/leads">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold font-headline text-white tracking-tight">Create New Lead</h1>
-          <p className="text-muted-foreground mt-1">Add a new prospect to your sales pipeline.</p>
-        </div>
+    <div className="max-w-4xl mx-auto space-y-6 pb-20">
+      <BackButton />
+      
+      <div>
+        <h1 className="text-3xl font-bold font-headline text-white tracking-tight">Create New Lead</h1>
+        <p className="text-muted-foreground mt-1">Add a new prospect to your sales pipeline.</p>
       </div>
 
       <form onSubmit={handleSubmit}>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { AccountService } from '@/services/account-service';
 import { toast } from 'sonner';
+import { BackButton } from '@/components/shared/back-button';
 
 const TABS = [
   { icon: User, label: "Account" },
@@ -191,7 +191,9 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-10">
+      <BackButton />
+      
       <div>
         <h1 className="text-4xl font-bold font-headline text-white">Settings</h1>
         <p className="text-muted-foreground mt-1.5">Manage your account and platform preferences.</p>

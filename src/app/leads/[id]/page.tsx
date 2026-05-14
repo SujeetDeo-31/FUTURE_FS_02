@@ -43,13 +43,14 @@ import { LeadStatus, LeadPriority, Lead } from "@/types/crm";
 import { aiNextActionSuggestion, AiNextActionSuggestionOutput } from "@/ai/flows/ai-next-action-suggestion";
 import { LeadService } from "@/services/lead-service";
 import { useToast } from "@/hooks/use-toast";
+import { BackButton } from "@/components/shared/back-button";
 
 const statusColors: Record<LeadStatus, string> = {
   New: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   Contacted: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   Qualified: "bg-purple-500/10 text-purple-500 border-purple-500/20",
   "Proposal Sent": "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
-  Converted: "bg-green-500/10 text-green-500 border-green-500/20",
+  Converted: "bg-green-500/10 text-green-400 border-green-500/20",
   Lost: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
@@ -158,28 +159,26 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-full hover:bg-white/5">
-            <Link href="/leads">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-          </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold font-headline text-white">{lead.name}</h1>
-              <Badge variant="outline" className={statusColors[lead.status]}>{lead.status}</Badge>
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{lead.priority} Priority</Badge>
+      <div className="flex flex-col gap-1">
+        <BackButton />
+        <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold font-headline text-white">{lead.name}</h1>
+                <Badge variant="outline" className={statusColors[lead.status]}>{lead.status}</Badge>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{lead.priority} Priority</Badge>
+              </div>
+              <p className="text-muted-foreground flex items-center gap-2 mt-1">
+                <Building2 className="w-4 h-4" /> {lead.company} • Added on {new Date(lead.createdAt).toLocaleDateString()}
+              </p>
             </div>
-            <p className="text-muted-foreground flex items-center gap-2 mt-1">
-              <Building2 className="w-4 h-4" /> {lead.company} • Added on {new Date(lead.createdAt).toLocaleDateString()}
-            </p>
           </div>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="gap-2 border-white/10 hover:bg-white/5 px-6 h-11" onClick={() => setIsEditDialogOpen(true)}>
-            <PenSquare className="w-4 h-4" /> Edit Profile
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="outline" className="gap-2 border-white/10 hover:bg-white/5 px-6 h-11" onClick={() => setIsEditDialogOpen(true)}>
+              <PenSquare className="w-4 h-4" /> Edit Profile
+            </Button>
+          </div>
         </div>
       </div>
 

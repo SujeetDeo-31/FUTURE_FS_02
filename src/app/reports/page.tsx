@@ -1,4 +1,3 @@
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -19,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Download, TrendingUp, Users, Target } from "lucide-react";
 import { useCRMStats } from "@/hooks/use-crm-stats";
 import { GlassCard } from "@/components/shared/glass-card";
+import { BackButton } from "@/components/shared/back-button";
 
 const COLORS = ["#7c3aed", "#d8b4fe", "#4f46e5", "#a78bfa", "#6366f1", "#8b5cf6"];
 
@@ -37,7 +37,9 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-10">
+      <BackButton />
+      
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold font-headline text-white">Analytics Suite</h1>
