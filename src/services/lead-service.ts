@@ -1,6 +1,6 @@
 'use client';
 
-import { Lead, LeadStatus } from '@/types/crm';
+import { Lead, LeadStatus, Note } from '@/types/crm';
 
 export const LeadService = {
   createLead: async (data: Partial<Lead>) => {
@@ -10,6 +10,16 @@ export const LeadService = {
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to create lead');
+    return response.json();
+  },
+
+  updateLead: async (leadId: string, data: Partial<Lead>) => {
+    const response = await fetch(`/api/leads/${leadId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update lead');
     return response.json();
   },
 
@@ -23,6 +33,16 @@ export const LeadService = {
       }),
     });
     if (!response.ok) throw new Error('Failed to update lead status');
+    return response.json();
+  },
+
+  addNote: async (leadId: string, content: string) => {
+    const response = await fetch(`/api/leads/${leadId}/notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, authorName: 'Admin' }),
+    });
+    if (!response.ok) throw new Error('Failed to add note');
     return response.json();
   },
 
