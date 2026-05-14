@@ -8,7 +8,6 @@ import {
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-helpers';
-import { z } from 'zod';
 
 export async function GET(request: NextRequest) {
   try {

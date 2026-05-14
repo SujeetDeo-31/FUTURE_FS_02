@@ -14,7 +14,6 @@ import {
   Sparkles,
   Save,
   PenSquare,
-  ChevronRight,
   Loader2,
   CheckCircle2
 } from "lucide-react";
@@ -51,7 +50,7 @@ const statusColors: Record<LeadStatus, string> = {
   Qualified: "bg-purple-500/10 text-purple-500 border-purple-500/20",
   "Proposal Sent": "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
   Converted: "bg-green-500/10 text-green-500 border-green-500/20",
-  Lost: "bg-red-500/10 text-red-500 border-red-500/20",
+  Lost: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -62,11 +61,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<AiNextActionSuggestionOutput | null>(null);
   
-  // Note state
   const [newNote, setNewNote] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
 
-  // Edit Modal State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUpdatingLead, setIsUpdatingLead] = useState(false);
   const [editData, setEditData] = useState<Partial<Lead>>({});
@@ -284,11 +281,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                         </span>
                       </div>
                     ))}
-                    {(!lead.statusHistory?.length && !lead.notesHistory?.length) && (
-                      <div className="py-10 text-center text-muted-foreground text-sm italic">
-                        No activity records found for this lead.
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -337,11 +329,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             </CardHeader>
             <CardContent className="space-y-4">
               {aiSuggestion ? (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-4"
-                >
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                   <div className="p-4 bg-black/40 rounded-xl border border-primary/10">
                     <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Next Step</p>
                     <p className="text-sm font-semibold text-white leading-relaxed">{aiSuggestion.suggestedAction}</p>
@@ -350,20 +338,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Analysis Reasoning</p>
                     <p className="text-xs text-muted-foreground leading-relaxed italic">"{aiSuggestion.reasoning}"</p>
                   </div>
-                  {aiSuggestion.suggestedCommunicationStrategy && (
-                    <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
-                      <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mb-2">Tone Guidance</p>
-                      <p className="text-xs text-white/90 leading-relaxed">{aiSuggestion.suggestedCommunicationStrategy}</p>
-                    </div>
-                  )}
                   <div className="flex items-center justify-between pt-4 border-t border-white/5">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       <span className="text-[10px] font-bold text-muted-foreground">Confidence: {aiSuggestion.confidenceScore}%</span>
                     </div>
-                    <Button onClick={() => setAiSuggestion(null)} size="sm" variant="ghost" className="h-7 text-[10px] font-bold text-primary hover:bg-primary/10">
-                      Refine Strategy
-                    </Button>
                   </div>
                 </motion.div>
               ) : (
@@ -382,27 +361,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               )}
             </CardContent>
           </Card>
-
-          <Card className="bg-white/[0.02] border-white/10 backdrop-blur-xl">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-sm font-bold text-white uppercase tracking-widest">Workflow Tasks</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start gap-3 h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/50 text-xs font-semibold group transition-all">
-                <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" /> Draft Outreach
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-3 h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/50 text-xs font-semibold group transition-all">
-                <Calendar className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" /> Set Appointment
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-3 h-11 border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/50 text-xs font-semibold group transition-all">
-                <Phone className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" /> Log Call Sync
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
-      {/* Edit Lead Modal */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl bg-popover/95 backdrop-blur-2xl border-white/10 rounded-2xl p-0 overflow-hidden">
           <form onSubmit={handleUpdateLead}>
@@ -413,45 +374,24 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
-                <Input 
-                  value={editData.name || ''} 
-                  onChange={(e) => setEditData({...editData, name: e.target.value})}
-                  className="bg-white/5 border-white/10 h-11"
-                  required
-                />
+                <Input value={editData.name || ''} onChange={(e) => setEditData({...editData, name: e.target.value})} className="bg-white/5 border-white/10 h-11" required />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company</Label>
-                <Input 
-                  value={editData.company || ''} 
-                  onChange={(e) => setEditData({...editData, company: e.target.value})}
-                  className="bg-white/5 border-white/10 h-11"
-                />
+                <Input value={editData.company || ''} onChange={(e) => setEditData({...editData, company: e.target.value})} className="bg-white/5 border-white/10 h-11" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                <Input 
-                  value={editData.email || ''} 
-                  onChange={(e) => setEditData({...editData, email: e.target.value})}
-                  className="bg-white/5 border-white/10 h-11"
-                  type="email"
-                  required
-                />
+                <Input value={editData.email || ''} onChange={(e) => setEditData({...editData, email: e.target.value})} className="bg-white/5 border-white/10 h-11" type="email" required />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Phone Number</Label>
-                <Input 
-                  value={editData.phone || ''} 
-                  onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                  className="bg-white/5 border-white/10 h-11"
-                />
+                <Input value={editData.phone || ''} onChange={(e) => setEditData({...editData, phone: e.target.value})} className="bg-white/5 border-white/10 h-11" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline Status</Label>
                 <Select value={editData.status} onValueChange={(v) => setEditData({...editData, status: v as LeadStatus})}>
-                  <SelectTrigger className="bg-white/5 border-white/10 h-11">
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="bg-white/5 border-white/10 h-11"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-popover border-white/10">
                     <SelectItem value="New">New</SelectItem>
                     <SelectItem value="Contacted">Contacted</SelectItem>
@@ -465,9 +405,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Priority</Label>
                 <Select value={editData.priority} onValueChange={(v) => setEditData({...editData, priority: v as LeadPriority})}>
-                  <SelectTrigger className="bg-white/5 border-white/10 h-11">
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="bg-white/5 border-white/10 h-11"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-popover border-white/10">
                     <SelectItem value="Low">Low</SelectItem>
                     <SelectItem value="Medium">Medium</SelectItem>
@@ -475,24 +413,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Internal Memo</Label>
-                <Textarea 
-                  value={editData.notes || ''} 
-                  onChange={(e) => setEditData({...editData, notes: e.target.value})}
-                  className="bg-white/5 border-white/10 min-h-[100px] resize-none"
-                />
-              </div>
             </div>
             <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3">
               <Button type="button" variant="ghost" onClick={() => setIsEditDialogOpen(false)} className="hover:bg-white/5">Cancel</Button>
-              <Button 
-                type="submit" 
-                className="bg-primary hover:bg-primary/90 px-8 min-w-[140px]"
-                disabled={isUpdatingLead}
-              >
-                {isUpdatingLead ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                Update Record
+              <Button type="submit" className="bg-primary hover:bg-primary/90 px-8 min-w-[140px]" disabled={isUpdatingLead}>
+                {isUpdatingLead ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />} Update Record
               </Button>
             </DialogFooter>
           </form>

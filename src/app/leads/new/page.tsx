@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { 
   ArrowLeft, 
   Save, 
@@ -34,7 +33,6 @@ export default function NewLeadPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  // Use controlled states for Select components to ensure data integrity
   const [status, setStatus] = useState<LeadStatus>("New");
   const [priority, setPriority] = useState<LeadPriority>("Medium");
   const [source, setSource] = useState("Website");
@@ -184,13 +182,6 @@ export default function NewLeadPage() {
                 </div>
               </div>
             </GlassCard>
-
-            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-400 shrink-0" />
-              <p className="text-[11px] text-blue-400/80 leading-relaxed">
-                New leads are automatically tracked in the activity timeline and analytics dashboard upon creation.
-              </p>
-            </div>
 
             <Button 
               type="submit" 

@@ -9,7 +9,6 @@ import {
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-helpers';
-import { z } from 'zod';
 
 async function getLeadDetails(id: string) {
   const lead = await Lead.findById(id).lean();
