@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -6,6 +7,9 @@ import { Providers } from "@/providers";
 export const metadata: Metadata = {
   title: 'LeadFlow CRM | Intelligent Lead Management',
   description: 'A professional SaaS dashboard for modern sales teams.',
+  icons: {
+    icon: [], // Explicitly empty to prevent build-time favicon discovery issues
+  }
 };
 
 export default function RootLayout({
