@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -124,7 +125,7 @@ export default function LeadsPage() {
   const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
 
   const toggleSelectAll = () => {
-    if (selectedLeads.length === paginatedLeads.length) {
+    if (selectedLeads.length === paginatedLeads.length && paginatedLeads.length > 0) {
       setSelectedLeads([]);
     } else {
       setSelectedLeads(paginatedLeads.map(l => l._id || l.id));
@@ -152,7 +153,7 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-20">
       <BackButton />
       
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">

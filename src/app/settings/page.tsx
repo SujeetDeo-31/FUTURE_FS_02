@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -191,7 +192,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-10">
       <BackButton />
       
       <div>

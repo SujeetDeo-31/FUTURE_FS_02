@@ -1,3 +1,4 @@
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -37,7 +38,7 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-10">
       <BackButton />
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
