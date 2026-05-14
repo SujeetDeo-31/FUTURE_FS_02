@@ -1,19 +1,16 @@
+
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IUser extends Document {
-  name: string;
   email: string;
-  image?: string;
-  role: 'admin' | 'user';
-  createdAt: Date;
-  updatedAt: Date;
+  name: string;
+  bio: string;
 }
 
 const UserSchema: Schema = new Schema({
-  name: { type: String, required: true },
   email: { type: String, required: true, unique: true, index: true },
-  image: { type: String },
-  role: { type: String, enum: ['admin', 'user'], default: 'user' },
+  name: { type: String, required: true },
+  bio: { type: String },
 }, { 
   timestamps: true 
 });
