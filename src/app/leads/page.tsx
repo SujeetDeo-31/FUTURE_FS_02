@@ -6,13 +6,11 @@ import Link from "next/link";
 import { 
   Search, 
   Filter, 
-  MoreHorizontal, 
   Plus,
   ArrowUpDown,
   Mail,
   ExternalLink,
   Briefcase,
-  Zap,
   ChevronLeft,
   ChevronRight,
   Trash2,
@@ -31,13 +29,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -112,11 +103,11 @@ export default function LeadsPage() {
 
   const filteredLeads = useMemo(() => {
     return leads.filter(lead => {
-      const matchesSearch = 
-        lead.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        lead.company.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        lead.email.toLowerCase().includes(debouncedSearch.toLowerCase());
+      const nameMatch = lead.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) || false;
+      const companyMatch = lead.company?.toLowerCase().includes(debouncedSearch.toLowerCase()) || false;
+      const emailMatch = lead.email?.toLowerCase().includes(debouncedSearch.toLowerCase()) || false;
       
+      const matchesSearch = nameMatch || companyMatch || emailMatch;
       const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
       const matchesPriority = priorityFilter === "all" || lead.priority === priorityFilter;
 
@@ -166,8 +157,10 @@ export default function LeadsPage() {
           <h1 className="text-4xl font-bold font-headline tracking-tight text-white">Lead Manager</h1>
           <p className="text-muted-foreground mt-1.5 text-base">Visualize and manage your entire sales pipeline.</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 shadow-xl shadow-primary/20 gap-2 rounded-xl">
-          <Plus className="w-4 h-4" /> Add Lead
+        <Button className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 shadow-xl shadow-primary/20 gap-2 rounded-xl" asChild>
+          <Link href="/leads/new">
+            <Plus className="w-4 h-4" /> Add Lead
+          </Link>
         </Button>
       </header>
 
