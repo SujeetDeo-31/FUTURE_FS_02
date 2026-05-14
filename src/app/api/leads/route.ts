@@ -1,3 +1,4 @@
+
 import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
@@ -8,8 +9,9 @@ import {
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-helpers';
+import { withApiAuth } from '@/lib/auth-utils';
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest, context: { params: any }) {
   try {
     await dbConnect();
     const { searchParams } = new URL(request.url);
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest, context: { params: any }) {
   try {
     await dbConnect();
     const body = await request.json();
@@ -51,3 +53,6 @@ export async function POST(request: NextRequest) {
     return errorResponse(error.message);
   }
 }
+
+export const GET = withApiAuth(getHandler);
+export const POST = withApiAuth(postHandler);

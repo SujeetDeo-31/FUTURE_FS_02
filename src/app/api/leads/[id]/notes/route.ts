@@ -1,3 +1,4 @@
+
 import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
@@ -9,8 +10,9 @@ import {
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-helpers';
+import { withApiAuth } from '@/lib/auth-utils';
 
-export async function POST(
+async function postHandler(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -48,3 +50,5 @@ export async function POST(
     return errorResponse(error.message);
   }
 }
+
+export const POST = withApiAuth(postHandler);

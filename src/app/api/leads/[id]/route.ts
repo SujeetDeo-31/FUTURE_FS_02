@@ -1,3 +1,4 @@
+
 import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
@@ -9,6 +10,7 @@ import {
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-helpers';
+import { withApiAuth } from '@/lib/auth-utils';
 
 async function getLeadDetails(id: string) {
   const lead = await Lead.findById(id).lean();
@@ -30,7 +32,7 @@ async function getLeadDetails(id: string) {
   };
 }
 
-export async function GET(
+async function getHandler(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -49,7 +51,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+async function patchHandler(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -101,7 +103,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
+async function deleteHandler(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -114,3 +116,7 @@ export async function DELETE(
     return errorResponse(error.message);
   }
 }
+
+export const GET = withApiAuth(getHandler);
+export const PATCH = withApiAuth(patchHandler);
+export const DELETE = withApiAuth(deleteHandler);

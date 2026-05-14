@@ -1,10 +1,12 @@
+
 import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
 import { subMonths, subDays } from 'date-fns';
 import { successResponse, errorResponse } from '@/lib/api-helpers';
+import { withApiAuth } from '@/lib/auth-utils';
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest, context: { params: any }) {
   try {
     await dbConnect();
     await Lead.deleteMany({});
@@ -65,3 +67,5 @@ export async function POST(request: NextRequest) {
     return errorResponse(error.message);
   }
 }
+
+export const POST = withApiAuth(postHandler);

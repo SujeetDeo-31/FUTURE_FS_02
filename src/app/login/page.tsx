@@ -1,129 +1,191 @@
 
 "use client";
 
-import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Zap, Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { motion, Variants } from "framer-motion";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { Zap, BrainCircuit } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-
+    setError("");
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         redirect: false,
-        username,
+        email,
         password,
       });
-
       if (result?.error) {
-        setError('Invalid credentials. Please check your username and password.');
-        setLoading(false);
+        setError("Invalid credentials. Please try again.");
       } else {
-        router.push('/dashboard');
-        router.refresh();
+        window.location.href = "/dashboard";
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError("An unexpected error occurred.");
+    } finally {
       setLoading(false);
     }
   };
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+      },
+    },
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#09090b] p-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.05),transparent_50%)] pointer-events-none" />
-      
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-violet-900 text-white flex items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
         className="w-full max-w-md"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-primary p-3 rounded-2xl shadow-2xl shadow-primary/20 mb-4">
-            <Zap className="w-8 h-8 text-white fill-white" />
-          </div>
-          <h1 className="text-3xl font-bold font-headline text-white tracking-tight">LeadFlow</h1>
-          <p className="text-muted-foreground text-sm uppercase tracking-widest font-bold mt-1">Enterprise AI CRM</p>
-        </div>
+        <div className="relative backdrop-blur-xl bg-black/30 p-8 rounded-2xl border border-white/10 shadow-2xl shadow-violet-500/10">
+          <motion.div
+            className="absolute -top-16 -right-16 w-48 h-48 bg-violet-500 rounded-full filter blur-4xl opacity-20"
+            animate={{
+              x: [0, 20, 0],
+              y: [0, -20, 0],
+              scale: [1, 1.1, 1],
+              rotate: [0, 10, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          />
+          <motion.div
+            className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500 rounded-full filter blur-4xl opacity-10"
+            animate={{
+              x: [0, -20, 0],
+              y: [0, 20, 0],
+              scale: [1, 1.2, 1],
+              rotate: [0, -10, 0],
+            }}
+            transition={{
+              duration: 30,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          />
 
-        <Card className="bg-white/[0.02] border-white/10 backdrop-blur-2xl shadow-2xl overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-          <CardHeader className="space-y-1 relative pt-8">
-            <CardTitle className="text-2xl font-bold text-center text-white">Welcome back</CardTitle>
-            <CardDescription className="text-center text-muted-foreground">
-              Enter your credentials to access the workstation
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-8 pt-4 relative">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-400">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-xs font-medium ml-2">{error}</AlertDescription>
-                </Alert>
-              )}
-              
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="admin"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-white/5 border-white/10 focus:border-primary/50 h-12 transition-all"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-white/5 border-white/10 focus:border-primary/50 h-12 transition-all"
-                  required
-                />
-              </div>
+          <motion.div variants={itemVariants} className="relative z-10">
+            <Link href="/" className="flex items-center justify-center mb-6 text-2xl font-bold font-headline tracking-tighter text-white no-underline">
+                <BrainCircuit className="w-8 h-8 mr-2.5 text-primary" />
+                Cogni<span className="text-primary">Track</span>
+            </Link>
+          </motion.div>
 
-              <Button 
-                type="submit" 
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 transition-all rounded-xl"
-                disabled={loading}
+          <motion.h2
+            variants={itemVariants}
+            className="text-center text-2xl font-bold font-headline text-white mb-2 tracking-tight"
+          >
+            Welcome Back
+          </motion.h2>
+          <motion.p
+            variants={itemVariants}
+            className="text-center text-sm text-muted-foreground mb-8"
+          >
+            Enter your credentials to access your workspace.
+          </motion.p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <motion.div variants={itemVariants}>
+              <Label
+                htmlFor="email"
+                className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
               >
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="bg-white/5 border-white/10 mt-2"
+              />
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <Label
+                htmlFor="password"
+                className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
+              >
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="bg-white/5 border-white/10 mt-2"
+              />
+            </motion.div>
+
+            {error && (
+                <motion.p variants={itemVariants} className="text-sm text-red-400 font-medium text-center">
+                    {error}
+                </motion.p>
+            )}
+
+            <motion.div variants={itemVariants}>
+              <Button type="submit" className="w-full h-11 mt-4 font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" disabled={loading}>
                 {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <div className="flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    <span>Authenticating...</span>
+                  </div>
                 ) : (
-                  "Authenticate"
+                  <div className="flex items-center justify-center">
+                     <Zap className="w-4 h-4 mr-2" />
+                    Sign In
+                  </div>
                 )}
               </Button>
-            </form>
-            
-            <div className="mt-8 pt-6 border-t border-white/5 text-center">
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
-                Secure Enterprise Environment
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            </motion.div>
+          </form>
+
+            <motion.div variants={itemVariants} className="text-center text-xs text-muted-foreground mt-8">
+                <p>
+                    Don't have an account?{' '}
+                    <Link href="#" className="font-bold text-primary hover:underline">
+                        Contact Support
+                    </Link>
+                </p>
+            </motion.div>
+        </div>
       </motion.div>
     </div>
   );
