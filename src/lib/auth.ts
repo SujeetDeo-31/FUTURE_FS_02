@@ -3,8 +3,8 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 
-if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
-  throw new Error('ADMIN_USERNAME and ADMIN_PASSWORD must be set');
+if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+  throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set');
 }
 
 if (!process.env.NEXTAUTH_SECRET) {
@@ -16,7 +16,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        username: { label: 'Username', type: 'text' },
+        email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
@@ -24,10 +24,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
-        const { username, password } = credentials;
+        const { email, password } = credentials;
 
-        if (username !== process.env.ADMIN_USERNAME) {
-          throw new Error('Invalid username');
+        if (email !== process.env.ADMIN_EMAIL) {
+          throw new Error('Invalid email');
         }
 
         const isPasswordMatch = await bcrypt.compare(
