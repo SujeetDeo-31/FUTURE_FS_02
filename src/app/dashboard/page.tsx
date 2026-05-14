@@ -1,3 +1,4 @@
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -60,7 +61,7 @@ export default function DashboardPage() {
   const dashboardStats = [
     { label: "Total Leads", value: stats?.totalLeads || 0, change: "+12.5%", icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
     { label: "Conversion", value: `${stats?.conversionRate?.toFixed(1)}%`, change: "+2.4%", icon: Target, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-    { label: "Qualified", value: stats?.statusBreakdown['Qualified'] || 0, change: "+18%", icon: Zap, color: "text-violet-400", bg: "bg-violet-400/10" },
+    { label: "Qualified", value: stats?.statusBreakdown?.['Qualified'] || 0, change: "+18%", icon: Zap, color: "text-violet-400", bg: "bg-violet-400/10" },
     { label: "Overdue Follow-ups", value: stats?.followUpsDueCount || 0, change: "-2%", icon: Clock, color: "text-amber-400", bg: "bg-amber-400/10" },
   ];
 

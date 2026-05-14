@@ -62,7 +62,7 @@ export default function ReportsPage() {
               </div>
               <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">Conversion Rate</p>
             </div>
-            <h3 className="text-4xl font-bold font-headline text-white">{stats?.conversionRate.toFixed(1)}%</h3>
+            <h3 className="text-4xl font-bold font-headline text-white">{stats?.conversionRate?.toFixed(1) || 0}%</h3>
             <div className="mt-2 text-xs text-emerald-500 font-bold flex items-center gap-1">
               <TrendingUp className="w-3 h-3" /> Average Efficiency
             </div>
