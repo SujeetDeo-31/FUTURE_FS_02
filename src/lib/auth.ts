@@ -29,10 +29,12 @@ export const authOptions: NextAuthOptions = {
         if (email !== process.env.ADMIN_EMAIL) {
           throw new Error('Invalid email');
         }
+        
+        const decodedAdminPassword = Buffer.from(process.env.ADMIN_PASSWORD as string, 'base64').toString('utf-8');
 
         const isPasswordMatch = await bcrypt.compare(
           password,
-          process.env.ADMIN_PASSWORD as string
+          decodedAdminPassword
         );
 
         if (!isPasswordMatch) {
