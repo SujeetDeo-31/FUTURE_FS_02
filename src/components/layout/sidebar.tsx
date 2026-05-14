@@ -11,7 +11,6 @@ import {
   Settings,
   LogOut,
   PlusCircle,
-  Zap,
   Sparkles,
   Loader2
 } from "lucide-react";
@@ -35,7 +34,6 @@ export function Sidebar() {
   const fetchCredits = async () => {
     try {
       const user = await AccountService.getAccount();
-      // Ensure we check for actual numeric value directly from the response object
       if (user && typeof user.aiCredits === 'number') {
         setCredits(user.aiCredits);
       } else {
@@ -51,16 +49,28 @@ export function Sidebar() {
 
   useEffect(() => {
     fetchCredits();
-    // Refresh credits occasionally or on navigation
     const interval = setInterval(fetchCredits, 30000);
     return () => clearInterval(interval);
   }, [pathname]);
 
   return (
     <div className="flex flex-col w-64 h-screen bg-sidebar border-r border-sidebar-border sticky top-0 z-40">
-      <div className="flex items-center gap-3 px-6 py-8">
-        <div className="bg-primary p-2 rounded-lg shadow-lg shadow-primary/20">
-          <Zap className="w-5 h-5 text-white fill-white" />
+      <div className="flex items-center gap-3.5 px-5 py-8">
+        <div className="bg-primary p-2.5 rounded-lg shadow-lg shadow-primary/20">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-5 h-5 text-white"
+          >
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
         </div>
         <div>
           <h1 className="text-lg font-headline font-bold tracking-tight text-white">

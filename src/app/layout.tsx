@@ -8,7 +8,10 @@ export const metadata: Metadata = {
   title: 'LeadFlow CRM | Intelligent Lead Management',
   description: 'A professional SaaS dashboard for modern sales teams.',
   icons: {
-    icon: [], // Explicitly empty to prevent build-time favicon discovery issues
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
   }
 };
 
