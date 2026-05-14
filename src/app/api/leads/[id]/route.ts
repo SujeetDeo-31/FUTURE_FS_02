@@ -1,82 +1,117 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
 import Activity from '@/models/Activity';
 import Note from '@/models/Note';
+import { updateLeadSchema } from '@/lib/validation';
+import {
+  successResponse,
+  errorResponse,
+  validationErrorResponse,
+} from '@/lib/api-helpers';
+import { z } from 'zod';
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function getLeadDetails(id: string) {
+  const lead = await Lead.findById(id).lean();
+  if (!lead) return null;
+
+  const notes = await Note.find({ leadId: id }).sort({ createdAt: -1 });
+  const activities = await Activity.find({ leadId: id }).sort({ createdAt: -1 });
+
+  return {
+    ...lead,
+    notesHistory: notes,
+    statusHistory: activities
+      .filter((a) => a.type === 'status')
+      .map((a) => ({
+        timestamp: a.createdAt.toISOString(),
+        oldStatus: a.metadata?.oldStatus || 'Unknown',
+        newStatus: a.metadata?.newStatus || 'Unknown',
+      })),
+  };
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await dbConnect();
     const { id } = await params;
-    const lead = await Lead.findById(id).lean();
-    if (!lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+    const leadDetails = await getLeadDetails(id);
 
-    // Fetch associated history
-    const notes = await Note.find({ leadId: id }).sort({ createdAt: -1 });
-    const activities = await Activity.find({ leadId: id }).sort({ createdAt: -1 });
+    if (!leadDetails) {
+      return errorResponse('Lead not found', 404);
+    }
 
-    return NextResponse.json({ 
-      ...lead, 
-      notesHistory: notes,
-      statusHistory: activities.filter(a => a.type === 'status').map(a => ({
-        timestamp: a.createdAt.toISOString(),
-        oldStatus: a.metadata?.oldStatus || 'Unknown',
-        newStatus: a.metadata?.newStatus || 'Unknown'
-      }))
-    });
+    return successResponse(leadDetails);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return errorResponse(error.message);
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
-    
-    const oldLead = await Lead.findById(id);
-    if (!oldLead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
 
-    const lead = await Lead.findByIdAndUpdate(id, body, { new: true });
-    
-    // Log Status Change Activity if changed
-    if (body.status && body.status !== oldLead.status) {
+    const validation = updateLeadSchema.safeParse(body);
+    if (!validation.success) {
+      return validationErrorResponse(validation.error.formErrors.fieldErrors);
+    }
+
+    const oldLead = await Lead.findById(id);
+    if (!oldLead) {
+      return errorResponse('Lead not found', 404);
+    }
+
+    const lead = await Lead.findByIdAndUpdate(id, validation.data, {
+      new: true,
+    });
+    if (!lead) {
+      return errorResponse('Lead not found', 404);
+    }
+
+    if (validation.data.status && validation.data.status !== oldLead.status) {
       await Activity.create({
         type: 'status',
         leadId: lead._id,
         leadName: lead.name,
-        content: `Status updated from ${oldLead.status} to ${body.status}`,
+        content: `Status updated from ${oldLead.status} to ${validation.data.status}`,
         metadata: {
           oldStatus: oldLead.status,
-          newStatus: body.status
-        }
+          newStatus: validation.data.status,
+        },
       });
-    }
-
-    // Log General Update Activity
-    if (!body.statusUpdate && !body.status) {
+    } else {
       await Activity.create({
         type: 'note',
         leadId: lead._id,
         leadName: lead.name,
-        content: `Lead profile details updated.`
+        content: `Lead profile details updated.`,
       });
     }
 
-    return NextResponse.json(lead);
+    return successResponse(lead);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return errorResponse(error.message);
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await dbConnect();
     const { id } = await params;
     await Lead.findByIdAndDelete(id);
-    return NextResponse.json({ message: 'Lead deleted' });
+    return successResponse({ message: 'Lead deleted' });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return errorResponse(error.message);
   }
 }

@@ -1,58 +1,54 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
 import Activity from '@/models/Activity';
+import { createLeadSchema } from '@/lib/validation';
+import {
+  successResponse,
+  errorResponse,
+  validationErrorResponse,
+} from '@/lib/api-helpers';
+import { z } from 'zod';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const priority = searchParams.get('priority');
-    
-    let query: any = {};
+
+    const query: any = {};
     if (status && status !== 'all') query.status = status;
     if (priority && priority !== 'all') query.priority = priority;
 
     const leads = await Lead.find(query).sort({ createdAt: -1 });
-    return NextResponse.json(leads);
+    return successResponse(leads);
   } catch (error: any) {
-    console.error("API /api/leads error:", error);
-  
-    return NextResponse.json(
-      {
-        error: error.message,
-        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-      },
-      { status: 500 }
-    );
+    return errorResponse(error.message);
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     const body = await request.json();
-    const lead = await Lead.create(body);
-    
-    // Log Activity
+
+    const validation = createLeadSchema.safeParse(body);
+    if (!validation.success) {
+      return validationErrorResponse(validation.error.formErrors.fieldErrors);
+    }
+
+    const lead = await Lead.create(validation.data);
+
     await Activity.create({
       type: 'lead',
       leadId: lead._id,
       leadName: lead.name,
-      content: `New lead created: ${lead.name} from ${lead.company || 'N/A'}`
+      content: `New lead created: ${lead.name}`,
     });
 
-    return NextResponse.json(lead, { status: 201 });
+    return successResponse(lead, 201);
   } catch (error: any) {
-    console.error("API /api/leads error:", error);
-  
-    return NextResponse.json(
-      {
-        error: error.message,
-        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-      },
-      { status: 500 }
-    );
+    return errorResponse(error.message);
   }
 }
