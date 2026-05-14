@@ -1,6 +1,6 @@
-
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -12,12 +12,13 @@ import {
   LogOut,
   PlusCircle,
   Zap,
-  ChevronRight,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { signOut } from "next-auth/react";
+import { AccountService } from "@/services/account-service";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -28,6 +29,26 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [credits, setCredits] = useState<number | null>(null);
+  const [loadingCredits, setLoadingCredits] = useState(true);
+
+  const fetchCredits = async () => {
+    try {
+      const response = await AccountService.getAccount();
+      setCredits(response.data.aiCredits);
+    } catch (error) {
+      console.error("Failed to fetch credits", error);
+    } finally {
+      setLoadingCredits(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCredits();
+    // Refresh credits occasionally or on navigation
+    const interval = setInterval(fetchCredits, 30000);
+    return () => clearInterval(interval);
+  }, [pathname]);
 
   return (
     <div className="flex flex-col w-64 h-screen bg-sidebar border-r border-sidebar-border sticky top-0 z-40">
@@ -89,13 +110,15 @@ export function Sidebar() {
             <p className="text-[10px] font-bold text-primary uppercase tracking-widest">AI Credits</p>
           </div>
           <div className="flex items-end justify-between mb-2">
-            <span className="text-lg font-bold text-white leading-none">386</span>
+            <span className="text-lg font-bold text-white leading-none">
+              {loadingCredits ? <Loader2 className="w-4 h-4 animate-spin inline" /> : credits}
+            </span>
             <span className="text-[10px] text-muted-foreground">/ 500</span>
           </div>
           <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
-              animate={{ width: '77%' }}
+              animate={{ width: `${((credits || 0) / 500) * 100}%` }}
               className="h-full bg-primary" 
               transition={{ duration: 1.5, ease: "easeOut" }}
             />

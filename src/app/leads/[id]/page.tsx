@@ -4,7 +4,6 @@ import { use, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
-  ArrowLeft, 
   Calendar, 
   Mail, 
   Phone, 
@@ -42,6 +41,7 @@ import {
 import { LeadStatus, LeadPriority, Lead } from "@/types/crm";
 import { aiNextActionSuggestion, AiNextActionSuggestionOutput } from "@/ai/flows/ai-next-action-suggestion";
 import { LeadService } from "@/services/lead-service";
+import { AccountService } from "@/services/account-service";
 import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/shared/back-button";
 
@@ -76,7 +76,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       const data = await response.json();
       setLead(data);
       
-      // Ensure date is string for input
       const formattedData = { ...data };
       if (data.followUpDate) {
         formattedData.followUpDate = new Date(data.followUpDate).toISOString().split('T')[0];
@@ -129,6 +128,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     if (!lead) return;
     setIsAiLoading(true);
     try {
+      // Deduct Credits first (10 credits for diagnosis)
+      await AccountService.deductCredits(10);
+      
       const result = await aiNextActionSuggestion({
         name: lead.name,
         email: lead.email,
@@ -141,9 +143,14 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         createdAt: lead.createdAt,
       });
       setAiSuggestion(result);
-    } catch (error) {
+      toast({ title: "Diagnosis Complete", description: "10 AI Credits used." });
+    } catch (error: any) {
       console.error("AI Error:", error);
-      toast({ title: "AI Unavailable", description: "Could not generate suggestion at this time.", variant: "destructive" });
+      toast({ 
+        title: "AI Analysis Failed", 
+        description: error.message || "Could not generate suggestion at this time.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsAiLoading(false);
     }
@@ -353,7 +360,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               ) : (
                 <div className="py-6 text-center space-y-4">
                   <p className="text-xs text-muted-foreground leading-relaxed px-4">
-                    Analyze behavioral history and status velocity to predict the optimal next move.
+                    Analyze behavioral history and status velocity to predict the optimal next move. (Costs 10 AI Credits)
                   </p>
                   <Button 
                     onClick={generateAiNextAction} 

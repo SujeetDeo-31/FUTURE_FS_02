@@ -11,7 +11,8 @@ import {
   MoreVertical,
   Database,
   Filter,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,8 @@ import {
 import { GlassCard } from "@/components/shared/glass-card";
 import { useCRMStats, TimeRange } from "@/hooks/use-crm-stats";
 import { LeadService } from "@/services/lead-service";
+import { AccountService } from "@/services/account-service";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 const COLORS = ["#8b5cf6", "#a78bfa", "#6366f1", "#4f46e5", "#3b82f6", "#10b981"];
@@ -52,13 +55,38 @@ const RANGE_LABELS: Record<TimeRange, string> = {
 export default function DashboardPage() {
   const [range, setRange] = useState<TimeRange>('30d');
   const { stats, leads, loading, refresh } = useCRMStats(range);
+  const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleSeedData = async () => {
     try {
       await LeadService.seedSampleData();
       refresh();
+      toast({ title: "Success", description: "Sample leads generated." });
     } catch (error) {
       console.error("Seeding failed", error);
+    }
+  };
+
+  const handleGenerateReport = async () => {
+    setIsGenerating(true);
+    try {
+      // Deduct Credits (25 for full report generation)
+      await AccountService.deductCredits(25);
+      
+      toast({ 
+        title: "Report Generated", 
+        description: "Your intelligent pipeline analysis is ready. (25 AI Credits used)" 
+      });
+      // In a real app, this would trigger a download or PDF generation
+    } catch (error: any) {
+      toast({ 
+        title: "Action Failed", 
+        description: error.message || "Failed to generate report.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -113,7 +141,12 @@ export default function DashboardPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button className="h-10 px-5 bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20">
+          <Button 
+            onClick={handleGenerateReport}
+            disabled={isGenerating}
+            className="h-10 px-5 bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20"
+          >
+            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Generate Report
           </Button>
         </div>

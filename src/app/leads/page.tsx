@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -152,6 +151,15 @@ export default function LeadsPage() {
     }
   };
 
+  const handleReset = () => {
+    setSearchTerm("");
+    setDebouncedSearch("");
+    setStatusFilter("all");
+    setPriorityFilter("all");
+    setCurrentPage(1);
+    toast({ title: "Filters Reset", description: "Showing all active leads." });
+  };
+
   return (
     <div className="space-y-6 pb-20">
       <BackButton />
@@ -215,11 +223,7 @@ export default function LeadsPage() {
             </Select>
 
             <Button variant="outline" className="h-11 px-4 border-white/10 bg-white/[0.03] hover:bg-white/10 text-white font-semibold rounded-xl gap-2" 
-              onClick={() => {
-                setSearchTerm("");
-                setStatusFilter("all");
-                setPriorityFilter("all");
-              }}>
+              onClick={handleReset}>
               <X className="w-3.5 h-3.5 text-muted-foreground" /> Reset
             </Button>
           </div>

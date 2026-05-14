@@ -1,4 +1,3 @@
-
 import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
@@ -26,7 +25,8 @@ async function getHandler(request: NextRequest, context: { params: any }) {
       user = await User.create({ 
         email, 
         name: session.user.name || 'Admin User', 
-        bio: 'Sales Lead at LeadFlow Enterprise.'
+        bio: 'Sales Lead at LeadFlow Enterprise.',
+        aiCredits: 500
       });
     }
 
@@ -52,7 +52,7 @@ async function putHandler(request: NextRequest, context: { params: any }) {
     const user = await User.findOneAndUpdate(
       { email },
       { name, bio },
-      { new: true, upsert: true } // new: return the modified document, upsert: create if it doesn't exist
+      { new: true, upsert: true }
     );
 
     return successResponse(user);
@@ -61,5 +61,34 @@ async function putHandler(request: NextRequest, context: { params: any }) {
   }
 }
 
+// Special handler for deducting credits
+async function patchHandler(request: NextRequest, context: { params: any }) {
+  try {
+    await dbConnect();
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user || !session.user.email) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const email = session.user.email;
+    const { amount } = await request.json();
+
+    const user = await User.findOne({ email });
+    if (!user) return errorResponse('User not found', 404);
+
+    if (user.aiCredits < amount) {
+      return errorResponse('Insufficient AI credits', 400);
+    }
+
+    user.aiCredits -= amount;
+    await user.save();
+
+    return successResponse({ credits: user.aiCredits });
+  } catch (error: any) {
+    return errorResponse(error.message);
+  }
+}
+
 export const GET = withApiAuth(getHandler);
 export const PUT = withApiAuth(putHandler);
+export const PATCH = withApiAuth(patchHandler);
