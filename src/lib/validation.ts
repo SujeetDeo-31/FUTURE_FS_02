@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const createLeadSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address'),
+  phone: z.string().optional(),
   company: z.string().optional(),
   source: z.string().min(1, 'Source is required'),
   status: z.enum(['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Converted', 'Lost']),
