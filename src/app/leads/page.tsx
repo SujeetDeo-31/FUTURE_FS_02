@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -153,7 +152,7 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-20">
+    <div className="space-y-6 pb-20">
       <BackButton />
       
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
