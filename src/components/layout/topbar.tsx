@@ -18,7 +18,7 @@ export function Topbar() {
       <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <h2 className="text-sm font-bold font-headline text-white/50 uppercase tracking-widest hidden sm:block">
-            Workspace Console
+            Workspace
           </h2>
         </div>
 
