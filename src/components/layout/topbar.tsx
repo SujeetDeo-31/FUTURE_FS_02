@@ -1,6 +1,7 @@
+
 "use client";
 
-import { Bell, Search, User, Command } from "lucide-react";
+import { Bell, Search, User, Command, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { signOut } from "next-auth/react";
 
 export function Topbar() {
   return (
@@ -51,7 +53,13 @@ export function Topbar() {
             <DropdownMenuItem className="focus:bg-primary/10 focus:text-primary cursor-pointer">Security</DropdownMenuItem>
             <DropdownMenuItem className="focus:bg-primary/10 focus:text-primary cursor-pointer">Billing</DropdownMenuItem>
             <DropdownMenuSeparator className="bg-white/5" />
-            <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">Logout</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { signOut } from "next-auth/react";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -100,7 +102,10 @@ export function Sidebar() {
           </div>
         </div>
 
-        <button className="flex items-center gap-3 w-full px-3 py-2.5 text-sidebar-foreground hover:text-destructive transition-all rounded-lg hover:bg-destructive/10 font-medium text-sm">
+        <button 
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="flex items-center gap-3 w-full px-3 py-2.5 text-sidebar-foreground hover:text-destructive transition-all rounded-lg hover:bg-destructive/10 font-medium text-sm"
+        >
           <LogOut className="w-4 h-4" />
           Logout
         </button>
