@@ -53,7 +53,7 @@ export default function NewLeadPage() {
       priority: priority,
       status: status,
       notes: formData.get("notes") as string,
-      followUpDate: followUpDate || null,
+      followUpDate: followUpDate || undefined,
     };
 
     try {
