@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import { Settings, User, Bell, Shield, CreditCard, Save, Lock, Banknote } from "lucide-react";
+import { Settings, User, Bell, Shield, CreditCard, Save, Lock, Banknote, Sparkles } from "lucide-react";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ export default function SettingsPage() {
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [email, setEmail] = useState('');
+  const [credits, setCredits] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -37,6 +38,7 @@ export default function SettingsPage() {
           setName(user.name || '');
           setBio(user.bio || '');
           setEmail(user.email || '');
+          setCredits(user.aiCredits || 0);
         }
       } catch (error) {
         console.error('Failed to fetch account', error);
@@ -99,6 +101,18 @@ export default function SettingsPage() {
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Short Bio</Label>
                 <Input value={bio} onChange={(e) => setBio(e.target.value)} className="bg-white/5 border-white/10" />
               </div>
+              
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="text-sm font-bold text-white">Available AI Credits</p>
+                    <p className="text-xs text-muted-foreground">Used for intelligence reports and lead diagnosis.</p>
+                  </div>
+                </div>
+                <span className="text-xl font-bold text-primary">{credits}</span>
+              </div>
+
               <Separator className="bg-white/5" />
               <div className="flex justify-end">
                 <Button onClick={handleSaveChanges} disabled={isSaving} className="bg-primary hover:bg-primary/90 gap-2 px-8">

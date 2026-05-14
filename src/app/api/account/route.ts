@@ -28,6 +28,10 @@ async function getHandler(request: NextRequest, context: { params: any }) {
         bio: 'Sales Lead at LeadFlow Enterprise.',
         aiCredits: 500
       });
+    } else if (user.aiCredits === undefined || user.aiCredits === null) {
+      // Handle migration for users created before aiCredits field was added
+      user.aiCredits = 500;
+      await user.save();
     }
 
     return successResponse(user);
@@ -61,7 +65,6 @@ async function putHandler(request: NextRequest, context: { params: any }) {
   }
 }
 
-// Special handler for deducting credits
 async function patchHandler(request: NextRequest, context: { params: any }) {
   try {
     await dbConnect();

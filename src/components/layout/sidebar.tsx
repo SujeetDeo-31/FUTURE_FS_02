@@ -35,11 +35,15 @@ export function Sidebar() {
   const fetchCredits = async () => {
     try {
       const user = await AccountService.getAccount();
+      // Ensure we check for actual numeric value directly from the response object
       if (user && typeof user.aiCredits === 'number') {
         setCredits(user.aiCredits);
+      } else {
+        setCredits(0);
       }
     } catch (error) {
       console.error("Failed to fetch credits", error);
+      setCredits(0);
     } finally {
       setLoadingCredits(false);
     }
@@ -113,7 +117,7 @@ export function Sidebar() {
           </div>
           <div className="flex items-end justify-between mb-2">
             <span className="text-lg font-bold text-white leading-none">
-              {loadingCredits ? <Loader2 className="w-4 h-4 animate-spin inline" /> : credits}
+              {loadingCredits ? <Loader2 className="w-4 h-4 animate-spin inline" /> : (credits ?? 0)}
             </span>
             <span className="text-[10px] text-muted-foreground">/ 500</span>
           </div>
