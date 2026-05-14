@@ -34,8 +34,10 @@ export function Sidebar() {
 
   const fetchCredits = async () => {
     try {
-      const response = await AccountService.getAccount();
-      setCredits(response.data.aiCredits);
+      const user = await AccountService.getAccount();
+      if (user && typeof user.aiCredits === 'number') {
+        setCredits(user.aiCredits);
+      }
     } catch (error) {
       console.error("Failed to fetch credits", error);
     } finally {

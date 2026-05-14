@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -33,11 +32,11 @@ export default function SettingsPage() {
     const fetchAccount = async () => {
       try {
         setIsLoading(true);
-        const response = await AccountService.getAccount();
-        if (response.data) {
-          setName(response.data.name);
-          setBio(response.data.bio);
-          setEmail(response.data.email);
+        const user = await AccountService.getAccount();
+        if (user) {
+          setName(user.name || '');
+          setBio(user.bio || '');
+          setEmail(user.email || '');
         }
       } catch (error) {
         console.error('Failed to fetch account', error);
