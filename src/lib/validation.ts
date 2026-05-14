@@ -8,6 +8,7 @@ export const createLeadSchema = z.object({
   source: z.string().min(1, 'Source is required'),
   status: z.enum(['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Converted', 'Lost']),
   priority: z.enum(['Low', 'Medium', 'High']),
+  followUpDate: z.string().optional().nullable(),
 });
 
 export const updateLeadSchema = createLeadSchema.partial();

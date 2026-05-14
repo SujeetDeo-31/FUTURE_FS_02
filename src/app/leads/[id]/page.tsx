@@ -1,4 +1,3 @@
-
 "use client";
 
 import { use, useState, useEffect, useCallback } from "react";
@@ -76,7 +75,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       if (!response.ok) throw new Error('Lead not found');
       const data = await response.json();
       setLead(data);
-      setEditData(data);
+      
+      // Ensure date is string for input
+      const formattedData = { ...data };
+      if (data.followUpDate) {
+        formattedData.followUpDate = new Date(data.followUpDate).toISOString().split('T')[0];
+      }
+      setEditData(formattedData);
     } catch (err) {
       console.error(err);
       toast({ title: "Error", description: "Failed to load lead details.", variant: "destructive" });
@@ -412,6 +417,19 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     <SelectItem value="High">High</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Follow-Up Date</Label>
+                <Input 
+                  type="date" 
+                  value={editData.followUpDate || ''} 
+                  onChange={(e) => setEditData({...editData, followUpDate: e.target.value})} 
+                  className="bg-white/5 border-white/10 h-11 [color-scheme:dark]" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Lead Source</Label>
+                <Input value={editData.source || ''} onChange={(e) => setEditData({...editData, source: e.target.value})} className="bg-white/5 border-white/10 h-11" />
               </div>
             </div>
             <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3">

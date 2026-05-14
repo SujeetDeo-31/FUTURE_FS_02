@@ -7,7 +7,8 @@ import {
   User, 
   Building2, 
   Mail, 
-  Phone
+  Phone,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ export default function NewLeadPage() {
   const [status, setStatus] = useState<LeadStatus>("New");
   const [priority, setPriority] = useState<LeadPriority>("Medium");
   const [source, setSource] = useState("Website");
+  const [followUpDate, setFollowUpDate] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,6 +53,7 @@ export default function NewLeadPage() {
       priority: priority,
       status: status,
       notes: formData.get("notes") as string,
+      followUpDate: followUpDate || null,
     };
 
     try {
@@ -156,6 +159,19 @@ export default function NewLeadPage() {
                       <SelectItem value="High">High Priority</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Follow-Up Date</Label>
+                  <div className="relative group">
+                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input 
+                      type="date" 
+                      value={followUpDate}
+                      onChange={(e) => setFollowUpDate(e.target.value)}
+                      className="pl-10 bg-white/5 border-white/10 h-11 [color-scheme:dark]" 
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">

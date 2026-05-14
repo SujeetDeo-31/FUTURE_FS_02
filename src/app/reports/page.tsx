@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
   BarChart, 
@@ -15,15 +16,30 @@ import {
 } from "recharts";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Download, TrendingUp, Users, Target } from "lucide-react";
-import { useCRMStats } from "@/hooks/use-crm-stats";
+import { Calendar, Download, TrendingUp, Users, Target, Filter } from "lucide-react";
+import { useCRMStats, TimeRange } from "@/hooks/use-crm-stats";
 import { GlassCard } from "@/components/shared/glass-card";
 import { BackButton } from "@/components/shared/back-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const COLORS = ["#7c3aed", "#d8b4fe", "#4f46e5", "#a78bfa", "#6366f1", "#8b5cf6"];
 
+const RANGE_LABELS: Record<TimeRange, string> = {
+  '7d': 'Last 7 Days',
+  '30d': 'Last 30 Days',
+  '90d': 'Last 90 Days',
+  'year': 'This Year',
+  'all': 'All Time'
+};
+
 export default function ReportsPage() {
-  const { stats, loading } = useCRMStats();
+  const [range, setRange] = useState<TimeRange>('30d');
+  const { stats, loading } = useCRMStats(range);
 
   if (loading) {
     return (
@@ -46,10 +62,26 @@ export default function ReportsPage() {
           <p className="text-muted-foreground mt-1">Deep insights into your sales performance.</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="gap-2 border-white/10">
-            <Calendar className="w-4 h-4" /> Last 30 Days
-          </Button>
-          <Button className="bg-primary hover:bg-primary/90 gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 border-white/10 h-11 px-4">
+                <Calendar className="w-4 h-4" /> {RANGE_LABELS[range]}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-popover/90 backdrop-blur-xl border-white/10 w-48">
+              {(Object.keys(RANGE_LABELS) as TimeRange[]).map((r) => (
+                <DropdownMenuItem 
+                  key={r} 
+                  onClick={() => setRange(r)}
+                  className="cursor-pointer focus:bg-primary/10 focus:text-primary"
+                >
+                  {RANGE_LABELS[r]}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button className="bg-primary hover:bg-primary/90 gap-2 h-11 px-6">
             <Download className="w-4 h-4" /> Export Data
           </Button>
         </div>
@@ -77,10 +109,10 @@ export default function ReportsPage() {
               <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
                 <Users className="w-5 h-5" />
               </div>
-              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">Total Volume</p>
+              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">Selected Volume</p>
             </div>
             <h3 className="text-4xl font-bold font-headline text-white">{stats?.totalLeads || 0}</h3>
-            <div className="mt-2 text-xs text-muted-foreground font-medium">Contacts managed in CRM</div>
+            <div className="mt-2 text-xs text-muted-foreground font-medium">Contacts in selected period</div>
           </CardContent>
         </GlassCard>
 
@@ -149,7 +181,7 @@ export default function ReportsPage() {
             </ResponsiveContainer>
             <div className="absolute flex flex-col items-center pointer-events-none">
               <span className="text-3xl font-bold text-white font-headline">{stats?.totalLeads || 0}</span>
-              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Total</span>
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Filtered</span>
             </div>
           </CardContent>
         </GlassCard>

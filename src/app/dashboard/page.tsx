@@ -1,6 +1,6 @@
-
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Users, 
@@ -28,15 +28,30 @@ import {
   CartesianGrid,
   Tooltip
 } from "recharts";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { GlassCard } from "@/components/shared/glass-card";
-import { useCRMStats } from "@/hooks/use-crm-stats";
+import { useCRMStats, TimeRange } from "@/hooks/use-crm-stats";
 import { LeadService } from "@/services/lead-service";
 import Link from "next/link";
 
 const COLORS = ["#8b5cf6", "#a78bfa", "#6366f1", "#4f46e5", "#3b82f6", "#10b981"];
 
+const RANGE_LABELS: Record<TimeRange, string> = {
+  '7d': 'Last 7 Days',
+  '30d': 'Last 30 Days',
+  '90d': 'Last 90 Days',
+  'year': 'This Year',
+  'all': 'All Time'
+};
+
 export default function DashboardPage() {
-  const { stats, leads, loading, refresh } = useCRMStats();
+  const [range, setRange] = useState<TimeRange>('30d');
+  const { stats, leads, loading, refresh } = useCRMStats(range);
 
   const handleSeedData = async () => {
     try {
@@ -59,7 +74,7 @@ export default function DashboardPage() {
   }
 
   const dashboardStats = [
-    { label: "Total Leads", value: stats?.totalLeads || 0, change: "+12.5%", icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
+    { label: "Active Leads", value: stats?.totalLeads || 0, change: "+12.5%", icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
     { label: "Conversion", value: `${stats?.conversionRate?.toFixed(1)}%`, change: "+2.4%", icon: Target, color: "text-emerald-400", bg: "bg-emerald-400/10" },
     { label: "Qualified", value: stats?.statusBreakdown?.['Qualified'] || 0, change: "+18%", icon: Zap, color: "text-violet-400", bg: "bg-violet-400/10" },
     { label: "Overdue Follow-ups", value: stats?.followUpsDueCount || 0, change: "-2%", icon: Clock, color: "text-amber-400", bg: "bg-amber-400/10" },
@@ -78,9 +93,26 @@ export default function DashboardPage() {
               <Database className="w-4 h-4" /> Seed Sample Data
             </Button>
           )}
-          <Button variant="outline" className="h-10 px-4 border-white/10 hover:bg-white/5 bg-transparent text-sm font-semibold">
-            <Filter className="w-3.5 h-3.5 mr-2 opacity-50" /> 30 Days
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-10 px-4 border-white/10 hover:bg-white/5 bg-transparent text-sm font-semibold gap-2">
+                <Filter className="w-3.5 h-3.5 opacity-50" /> {RANGE_LABELS[range]}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-popover/90 backdrop-blur-xl border-white/10 w-48">
+              {(Object.keys(RANGE_LABELS) as TimeRange[]).map((r) => (
+                <DropdownMenuItem 
+                  key={r} 
+                  onClick={() => setRange(r)}
+                  className="cursor-pointer focus:bg-primary/10 focus:text-primary"
+                >
+                  {RANGE_LABELS[r]}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button className="h-10 px-5 bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20">
             Generate Report
           </Button>
@@ -193,7 +225,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-2xl font-bold text-white tracking-tighter">{stats?.totalLeads || 0}</span>
-                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Total</span>
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Selected</span>
                 </div>
               </div>
               <div className="w-full space-y-3 px-4">
@@ -240,7 +272,9 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-bold text-white truncate">{lead.name}</span>
+                      <span className="text-sm font-bold text-white truncate">
+                        <Link href={`/leads/${lead._id || lead.id}`}>{lead.name}</Link>
+                      </span>
                       <span className="text-[10px] text-muted-foreground font-medium">
                         {new Date(lead.createdAt).toLocaleDateString()}
                       </span>

@@ -1,8 +1,6 @@
-
 "use client";
 
-import { Bell, Search, Command, LogOut } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,16 +16,10 @@ export function Topbar() {
   return (
     <header className="h-14 border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-30">
       <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="relative w-full max-w-sm group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input 
-            className="pl-9 bg-white/5 border-white/10 focus-visible:ring-1 focus-visible:ring-primary/50 h-9 text-sm rounded-lg" 
-            placeholder="Search leads..." 
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] text-muted-foreground bg-white/5 px-1.5 py-0.5 rounded border border-white/10">
-            <Command className="w-2.5 h-2.5" />
-            <span>K</span>
-          </div>
+        <div className="flex items-center gap-4">
+          <h2 className="text-sm font-bold font-headline text-white/50 uppercase tracking-widest hidden sm:block">
+            Workspace Console
+          </h2>
         </div>
 
         <div className="flex items-center gap-2">
