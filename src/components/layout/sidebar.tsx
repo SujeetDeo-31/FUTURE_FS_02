@@ -34,9 +34,11 @@ export function Sidebar() {
   const fetchCredits = async () => {
     try {
       const user = await AccountService.getAccount();
+      // Safe check for property existence and numeric value
       if (user && typeof user.aiCredits === 'number') {
         setCredits(user.aiCredits);
       } else {
+        // This handles cases where user object is valid but field is missing
         setCredits(0);
       }
     } catch (error) {
@@ -49,6 +51,7 @@ export function Sidebar() {
 
   useEffect(() => {
     fetchCredits();
+    // Poll for updates every 30 seconds to keep credit count fresh
     const interval = setInterval(fetchCredits, 30000);
     return () => clearInterval(interval);
   }, [pathname]);

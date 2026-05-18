@@ -29,7 +29,7 @@ async function getHandler(request: NextRequest, context: { params: any }) {
         aiCredits: 500
       });
     } else if (user.aiCredits === undefined || user.aiCredits === null) {
-      // Handle migration for users created before aiCredits field was added
+      // Handle lazy migration for users created before aiCredits field was added
       user.aiCredits = 500;
       await user.save();
     }
