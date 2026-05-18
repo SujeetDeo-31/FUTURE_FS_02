@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -28,7 +27,8 @@ import {
   MessageSquare,
   FileText,
   Loader2,
-  ArrowRight
+  ArrowRight,
+  Check
 } from 'lucide-react';
 
 import { GlassCard } from '@/components/shared/glass-card';
@@ -41,10 +41,17 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+const phoneRegex = /^[0-9+\-() ]*$/;
+
 const leadSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email'),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine((val) => !val || phoneRegex.test(val), {
+      message: 'Invalid phone format. Letters are not allowed.',
+    }),
   company: z.string().optional(),
   status: z.enum(['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Converted', 'Lost']),
   priority: z.enum(['Low', 'Medium', 'High']),
@@ -69,8 +76,6 @@ export default function LeadDetailPage() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
-  const [isDrafting, setIsDrafting] = useState(false);
-  const [aiEmail, setAiEmail] = useState<any>(null);
 
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<z.infer<typeof leadSchema>>({
     resolver: zodResolver(leadSchema)
@@ -105,8 +110,8 @@ export default function LeadDetailPage() {
       toast.success('Lead updated successfully');
       setIsEditing(false);
       fetchLeadAndAdmin();
-    } catch (error) {
-      toast.error('Failed to update lead');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update lead');
     }
   };
 
@@ -137,7 +142,6 @@ export default function LeadDetailPage() {
     }
   };
 
-  // AI Handlers
   const handleGenerateSummary = async () => {
     if (!lead) return;
     setIsSummarizing(true);
@@ -146,12 +150,12 @@ export default function LeadDetailPage() {
       const result = await summarizeLeadActivity({
         leadName: lead.name,
         notes: lead.notes.map(n => ({ timestamp: n.createdAt, content: n.content })),
-        statusHistory: [], // Placeholder for history
-        followUpHistory: [] // Placeholder
+        statusHistory: [],
+        followUpHistory: []
       });
       setAiSummary(result.summary);
-      window.dispatchEvent(new Event('profileUpdated')); // Refresh sidebar credits
-      toast.success('Activity summary generated (10 credits)');
+      window.dispatchEvent(new Event('profileUpdated'));
+      toast.success('Summary generated (10 credits)');
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate summary');
     } finally {
@@ -176,7 +180,7 @@ export default function LeadDetailPage() {
       });
       setAiSuggestion(result);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Intelligence analysis complete (15 credits)');
+      toast.success('Analysis complete (15 credits)');
     } catch (error: any) {
       toast.error(error.message || 'Failed to get suggestion');
     } finally {
@@ -214,7 +218,7 @@ export default function LeadDetailPage() {
               {lead.status}
             </Badge>
           </div>
-          <p className="text-muted-foreground text-sm font-medium">Lead ID: {lead._id?.substring(0, 8)} • Last updated {new Date(lead.updatedAt).toLocaleDateString()}</p>
+          <p className="text-muted-foreground text-sm font-medium">Lead ID: {lead._id?.substring(0, 8)} • Updated {new Date(lead.updatedAt).toLocaleDateString()}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="h-10 border-white/10 hover:bg-white/5 font-bold gap-2 rounded-xl" onClick={() => setIsEditing(!isEditing)}>
@@ -222,8 +226,8 @@ export default function LeadDetailPage() {
             {isEditing ? 'Cancel' : 'Edit Profile'}
           </Button>
           <Button variant="destructive" className="h-10 font-bold gap-2 rounded-xl shadow-lg shadow-red-500/10" onClick={handleDeleteLead} disabled={isDeleting}>
-            <Trash2 className="w-4 h-4" />
-            {isDeleting ? 'Deleting...' : 'Remove'}
+            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            {isDeleting ? 'Removing...' : 'Remove'}
           </Button>
         </div>
       </header>
@@ -245,10 +249,21 @@ export default function LeadDetailPage() {
                   {isEditing ? (
                     <form onSubmit={handleSubmit(handleUpdateLead)} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Input placeholder="Name" {...register('name')} className="bg-white/5 border-white/10" />
-                        <Input placeholder="Email" {...register('email')} className="bg-white/5 border-white/10" />
-                        <Input placeholder="Phone" {...register('phone')} className="bg-white/5 border-white/10" />
-                        <Input placeholder="Company" {...register('company')} className="bg-white/5 border-white/10" />
+                        <div className="space-y-1">
+                          <Input placeholder="Name" {...register('name')} className="bg-white/5 border-white/10" />
+                          {errors.name && <p className="text-[10px] text-destructive font-bold">{errors.name.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                          <Input placeholder="Email" {...register('email')} className="bg-white/5 border-white/10" />
+                          {errors.email && <p className="text-[10px] text-destructive font-bold">{errors.email.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                          <Input placeholder="Phone (numbers only)" {...register('phone')} className="bg-white/5 border-white/10" />
+                          {errors.phone && <p className="text-[10px] text-destructive font-bold">{errors.phone.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                          <Input placeholder="Company" {...register('company')} className="bg-white/5 border-white/10" />
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                          <Controller
@@ -278,7 +293,8 @@ export default function LeadDetailPage() {
                       </div>
                       <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>Discard</Button>
-                        <Button type="submit" className="bg-primary hover:bg-primary/90 font-bold px-8 shadow-lg shadow-primary/20" disabled={isSubmitting}>
+                        <Button type="submit" className="bg-primary hover:bg-primary/90 font-bold px-8 shadow-lg shadow-primary/20 gap-2" disabled={isSubmitting}>
+                          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                           {isSubmitting ? 'Saving...' : 'Save Changes'}
                         </Button>
                       </div>
@@ -427,32 +443,6 @@ export default function LeadDetailPage() {
                   </div>
                 </GlassCard>
               </div>
-
-              <GlassCard>
-                <div className="p-8">
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-400">
-                        <Mail className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-white">Draft Smart Email</h3>
-                        <p className="text-xs text-muted-foreground">Personalized outreach generated from lead context.</p>
-                      </div>
-                    </div>
-                    <Button 
-                      className="bg-primary hover:bg-primary/90 font-bold gap-2 shadow-lg shadow-primary/20"
-                      onClick={() => toast.info('Email draft feature requires desired CTA input.')}
-                    >
-                      Draft Outreach
-                    </Button>
-                  </div>
-                  <div className="p-12 text-center rounded-2xl border border-dashed border-white/10 bg-white/[0.01]">
-                    <Mail className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground font-medium">Drafting engine initialized. Specify a call-to-action to begin.</p>
-                  </div>
-                </div>
-              </GlassCard>
             </TabsContent>
           </Tabs>
         </div>
@@ -486,10 +476,9 @@ export default function LeadDetailPage() {
                 <div className="flex items-center gap-3">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
                   <div className="flex-1">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Next Follow-up</p>
-                    <p className="text-sm text-white font-semibold">Dec 14, 2024</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Created At</p>
+                    <p className="text-sm text-white font-semibold">{new Date(lead.createdAt).toLocaleDateString()}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-white"><ArrowRight className="w-3 h-3" /></Button>
                 </div>
               </div>
             </div>
@@ -501,9 +490,9 @@ export default function LeadDetailPage() {
                 <Sparkles className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-white">Magic Insights</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">Let AI analyze this lead's communication patterns and suggest the perfect closing strategy.</p>
-              <Button className="w-full bg-white text-black hover:bg-white/90 font-bold h-10 rounded-xl" onClick={handleGetSuggestion}>
-                Launch Analysis
+              <p className="text-xs text-muted-foreground leading-relaxed">Let AI analyze this lead's patterns and suggest the perfect closing strategy.</p>
+              <Button className="w-full bg-white text-black hover:bg-white/90 font-bold h-10 rounded-xl" onClick={handleGetSuggestion} disabled={isSuggesting}>
+                {isSuggesting ? 'Analyzing...' : 'Launch Analysis'}
               </Button>
             </div>
           </GlassCard>

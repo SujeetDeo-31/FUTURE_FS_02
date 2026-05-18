@@ -1,9 +1,16 @@
 import { z } from 'zod';
 
+const phoneRegex = /^[0-9+\-() ]*$/;
+
 export const createLeadSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine((val) => !val || phoneRegex.test(val), {
+      message: 'Invalid phone number. Letters are not allowed.',
+    }),
   company: z.string().optional(),
   source: z.string().min(1, 'Source is required'),
   status: z.enum(['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Converted', 'Lost']),

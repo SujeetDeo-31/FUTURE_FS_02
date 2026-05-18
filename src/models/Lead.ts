@@ -29,7 +29,15 @@ export interface ILead extends Document {
 const LeadSchema: Schema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, index: true },
-  phone: { type: String },
+  phone: { 
+    type: String,
+    validate: {
+      validator: function(v: string) {
+        return !v || /^[0-9+\-() ]*$/.test(v);
+      },
+      message: props => `${props.value} is not a valid phone number! Letters are not allowed.`
+    }
+  },
   company: { type: String },
   source: { type: String, default: 'Website' },
   status: { 

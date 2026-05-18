@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { LeadService } from '@/services/lead-service';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft, UserPlus, Loader2 } from 'lucide-react';
 import { GlassCard } from '@/components/shared/glass-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,10 +18,17 @@ import { BackButton } from '@/components/shared/back-button';
 import { useEffect, useState } from 'react';
 import { AccountService } from '@/services/account-service';
 
+const phoneRegex = /^[0-9+\-() ]*$/;
+
 const leadFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine((val) => !val || phoneRegex.test(val), {
+      message: 'Invalid phone format. Letters are not allowed.',
+    }),
   company: z.string().optional(),
   source: z.string(),
   status: z.enum(['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Converted', 'Lost']),
@@ -76,9 +83,9 @@ export default function NewLeadPage() {
       
       toast.success('Lead created successfully!');
       router.push(`/leads/${newLead._id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create lead:', error);
-      toast.error('Failed to create lead. Please try again.');
+      toast.error(error.message || 'Failed to create lead. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -264,7 +271,8 @@ export default function NewLeadPage() {
           </GlassCard>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="h-11 px-8 font-bold gap-2">
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
               {isSubmitting ? 'Creating Lead...' : 'Create Lead'}
             </Button>
           </div>
