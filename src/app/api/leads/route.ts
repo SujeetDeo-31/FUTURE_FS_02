@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       status,
       priority,
       assignedTo,
+      followUpDate,
       notes
     } = body;
 
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       source,
       status,
       priority,
+      followUpDate,
       assignedTo: assignedTo || 'Unassigned'
     };
 

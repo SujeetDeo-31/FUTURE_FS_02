@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
@@ -22,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, email, phone, company, source, status, priority, assignedTo } = body;
+    const { name, email, phone, company, source, status, priority, assignedTo, followUpDate } = body;
 
     const updatedLead = await Lead.findByIdAndUpdate(
       id,
@@ -35,6 +34,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         status,
         priority,
         assignedTo,
+        followUpDate,
       },
       { new: true, runValidators: true }
     );

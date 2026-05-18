@@ -19,6 +19,7 @@ export interface Lead {
   priority: LeadPriority;
   source: string;
   assignedTo?: string;
+  followUpDate?: string;
   createdAt: string;
   updatedAt: string;
   notes: LeadNote[];

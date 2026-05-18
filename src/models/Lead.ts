@@ -21,6 +21,7 @@ export interface ILead extends Document {
   status: 'New' | 'Contacted' | 'Qualified' | 'Proposal Sent' | 'Converted' | 'Lost';
   priority: 'Low' | 'Medium' | 'High';
   assignedTo: string;
+  followUpDate?: string;
   notes: Types.DocumentArray<ILeadNote>;
   createdAt: Date;
   updatedAt: Date;
@@ -52,6 +53,7 @@ const LeadSchema: Schema = new Schema({
     default: 'Medium' 
   },
   assignedTo: { type: String, default: 'Unassigned', index: true },
+  followUpDate: { type: String },
   notes: [LeadNoteSchema]
 }, { 
   timestamps: true 
