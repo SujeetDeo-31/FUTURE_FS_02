@@ -35,7 +35,7 @@ const LeadSchema: Schema = new Schema({
       validator: function(v: string) {
         return !v || /^[0-9+\-() ]*$/.test(v);
       },
-      message: props => `${props.value} is not a valid phone number! Letters are not allowed.`
+      message: (props: { value: string }) => `${props.value} is not a valid phone number! Letters are not allowed.`
     }
   },
   company: { type: String },
