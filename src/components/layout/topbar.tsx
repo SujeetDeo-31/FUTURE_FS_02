@@ -11,8 +11,54 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { AccountService } from "@/services/account-service";
 
 export function Topbar() {
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userInitials, setUserInitials] = useState<string>("..");
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return "..";
+    const nameParts = name.split(" ");
+    if (nameParts.length > 1 && nameParts[0] && nameParts[nameParts.length - 1]) {
+      return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+    }
+    if (name && name.length > 1) {
+      return name.substring(0, 2).toUpperCase();
+    }
+    return name ? name.substring(0, 1).toUpperCase() : "..";
+  };
+
+  const fetchUser = async () => {
+    try {
+      const user = await AccountService.getAccount();
+      if (user && user.name) {
+        setUserName(user.name);
+        setUserInitials(getInitials(user.name));
+      } else {
+        setUserName("Admin");
+        setUserInitials("AD");
+      }
+    } catch (error) {
+      console.error("Failed to fetch user for topbar", error);
+      setUserName("Admin");
+      setUserInitials("AD");
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+
+    const handleProfileUpdate = () => fetchUser();
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
+
   return (
     <header className="h-14 border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-30">
       <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -34,9 +80,9 @@ export function Topbar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-9 gap-2 pl-1 pr-2 rounded-full hover:bg-white/5 transition-all">
                 <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-[10px] font-bold text-white ring-2 ring-background">
-                  AD
+                  {userInitials}
                 </div>
-                <span className="text-sm font-medium text-white hidden sm:inline-block">Admin</span>
+                <span className="text-sm font-medium text-white hidden sm:inline-block">{userName || "..."}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 mt-2 bg-popover/90 backdrop-blur-xl border-white/10">
@@ -46,7 +92,7 @@ export function Topbar() {
               <DropdownMenuItem className="focus:bg-primary/10 focus:text-primary cursor-pointer">Security</DropdownMenuItem>
               <DropdownMenuItem className="focus:bg-primary/10 focus:text-primary cursor-pointer">Billing</DropdownMenuItem>
               <DropdownMenuSeparator className="bg-white/5" />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => signOut({ callbackUrl: '/login' })}
                 className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer gap-2"
               >
