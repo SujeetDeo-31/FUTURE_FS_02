@@ -1,3 +1,4 @@
+
 import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
@@ -9,7 +10,7 @@ import { withApiAuth } from '@/lib/auth-utils';
 import { getServerSession } from "next-auth/next"
 import { authOptions } from '@/lib/auth';
 
-async function getHandler(request: NextRequest, context: { params: any }) {
+async function getHandler(request: NextRequest) {
   try {
     await dbConnect();
     const session = await getServerSession(authOptions);
@@ -21,7 +22,6 @@ async function getHandler(request: NextRequest, context: { params: any }) {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // If user doesn't exist, create a default one
       user = await User.create({ 
         email, 
         name: session.user.name || 'Admin User', 
@@ -29,7 +29,6 @@ async function getHandler(request: NextRequest, context: { params: any }) {
         aiCredits: 500
       });
     } else if (user.aiCredits === undefined || user.aiCredits === null) {
-      // Handle lazy migration for users created before aiCredits field was added
       user.aiCredits = 500;
       await user.save();
     }
@@ -40,7 +39,7 @@ async function getHandler(request: NextRequest, context: { params: any }) {
   }
 }
 
-async function putHandler(request: NextRequest, context: { params: any }) {
+async function putHandler(request: NextRequest) {
   try {
     await dbConnect();
     const session = await getServerSession(authOptions);
@@ -65,7 +64,7 @@ async function putHandler(request: NextRequest, context: { params: any }) {
   }
 }
 
-async function patchHandler(request: NextRequest, context: { params: any }) {
+async function patchHandler(request: NextRequest) {
   try {
     await dbConnect();
     const session = await getServerSession(authOptions);

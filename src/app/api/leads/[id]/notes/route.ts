@@ -1,17 +1,19 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
   try {
+    const { id } = await params;
     const { content, authorName } = await request.json();
 
     if (!content || !authorName) {
       return NextResponse.json({ message: 'Content and author are required' }, { status: 400 });
     }
 
-    const lead = await Lead.findById(params.id);
+    const lead = await Lead.findById(id);
 
     if (!lead) {
       return NextResponse.json({ message: 'Lead not found' }, { status: 404 });

@@ -1,11 +1,13 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
   try {
-    const lead = await Lead.findById(params.id);
+    const { id } = await params;
+    const lead = await Lead.findById(id);
     if (!lead) {
       return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
     }
@@ -15,14 +17,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
   try {
+    const { id } = await params;
     const body = await request.json();
     const { name, email, phone, company, source, status, priority, assignedTo } = body;
 
     const updatedLead = await Lead.findByIdAndUpdate(
-      params.id,
+      id,
       {
         name,
         email,
@@ -50,10 +53,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect();
   try {
-    const deletedLead = await Lead.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const deletedLead = await Lead.findByIdAndDelete(id);
     if (!deletedLead) {
       return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
     }
