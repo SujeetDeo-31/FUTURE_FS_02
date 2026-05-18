@@ -1,453 +1,319 @@
-"use client";
+'use client';
 
-import { use, useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { Lead, LeadNote } from '@/types/crm';
+import { LeadService } from '@/services/lead-service';
+import { AccountService } from '@/services/account-service';
 import { 
-  Calendar, 
+  User, 
   Mail, 
   Phone, 
-  Building2, 
-  MessageSquare, 
-  History, 
-  Sparkles,
-  Save,
-  PenSquare,
-  Loader2,
-  CheckCircle2
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { LeadStatus, LeadPriority, Lead } from "@/types/crm";
-import { aiNextActionSuggestion, AiNextActionSuggestionOutput } from "@/ai/flows/ai-next-action-suggestion";
-import { LeadService } from "@/services/lead-service";
-import { AccountService } from "@/services/account-service";
-import { useToast } from "@/hooks/use-toast";
-import { BackButton } from "@/components/shared/back-button";
+  Building, 
+  Calendar, 
+  Tag, 
+  Flag, 
+  Paperclip, 
+  Plus, 
+  Save, 
+  Trash2,
+  Edit
+} from 'lucide-react';
 
-const statusColors: Record<LeadStatus, string> = {
-  New: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  Contacted: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  Qualified: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  "Proposal Sent": "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
-  Converted: "bg-green-500/10 text-green-400 border-green-500/20",
-  Lost: "bg-red-500/10 text-red-400 border-red-500/20",
-};
+import { GlassCard } from '@/components/shared/glass-card';
+import { BackButton } from '@/components/shared/back-button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
-export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const { toast } = useToast();
+const leadSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  status: z.enum(['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Converted', 'Lost']),
+  priority: z.enum(['Low', 'Medium', 'High']),
+  source: z.string(),
+  assignedTo: z.string()
+});
+
+export default function LeadDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const leadId = params.id as string;
+
   const [lead, setLead] = useState<Lead | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<AiNextActionSuggestionOutput | null>(null);
-  
-  const [newNote, setNewNote] = useState("");
+  const [adminName, setAdminName] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [newNote, setNewNote] = useState('');
   const [isSavingNote, setIsSavingNote] = useState(false);
 
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isUpdatingLead, setIsUpdatingLead] = useState(false);
-  const [editData, setEditData] = useState<Partial<Lead>>({});
+  const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<z.infer<typeof leadSchema>>({
+    resolver: zodResolver(leadSchema)
+  });
 
-  const fetchLead = useCallback(async () => {
+  const fetchLeadAndAdmin = async () => {
     try {
-      const response = await fetch(`/api/leads/${id}`);
-      if (!response.ok) throw new Error('Lead not found');
-      const data = await response.json();
-      setLead(data);
-      
-      const formattedData = { ...data };
-      if (data.followUpDate) {
-        formattedData.followUpDate = new Date(data.followUpDate).toISOString().split('T')[0];
+      const [leadData, admin] = await Promise.all([
+        LeadService.getLeadById(leadId),
+        AccountService.getAccount()
+      ]);
+      setLead(leadData);
+      reset(leadData);
+      if(admin && admin.name) {
+        setAdminName(admin.name);
       }
-      setEditData(formattedData);
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Error", description: "Failed to load lead details.", variant: "destructive" });
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      toast.error('Failed to load lead details.');
+      router.push('/leads');
     }
-  }, [id, toast]);
+  };
 
   useEffect(() => {
-    fetchLead();
-  }, [fetchLead]);
+    if (leadId) {
+      fetchLeadAndAdmin();
+    }
+  }, [leadId]);
 
-  const handleUpdateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!lead) return;
-    setIsUpdatingLead(true);
+  const handleUpdateLead = async (data: z.infer<typeof leadSchema>) => {
     try {
-      await LeadService.updateLead(id, editData);
-      toast({ title: "Success", description: "Lead updated successfully." });
-      setIsEditDialogOpen(false);
-      fetchLead();
+      await LeadService.updateLead(leadId, data);
+      toast.success('Lead updated successfully');
+      setIsEditing(false);
+      fetchLeadAndAdmin();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to update lead.", variant: "destructive" });
-    } finally {
-      setIsUpdatingLead(false);
+      toast.error('Failed to update lead');
+    }
+  };
+
+  const handleDeleteLead = async () => {
+    setIsDeleting(true);
+    try {
+      await LeadService.deleteLead(leadId);
+      toast.success('Lead deleted successfully');
+      router.push('/leads');
+    } catch (error) {
+      toast.error('Failed to delete lead');
+      setIsDeleting(false);
     }
   };
 
   const handleAddNote = async () => {
-    if (!newNote.trim() || !lead) return;
+    if (!newNote.trim()) return;
     setIsSavingNote(true);
     try {
-      await LeadService.addNote(id, newNote);
-      setNewNote("");
-      toast({ title: "Note Saved", description: "The activity has been logged." });
-      fetchLead();
+      const updatedLead = await LeadService.addNote(leadId, newNote);
+      setLead(updatedLead);
+      setNewNote('');
+      toast.success('Note added successfully');
     } catch (error) {
-      toast({ title: "Error", description: "Failed to save note.", variant: "destructive" });
+      toast.error('Failed to add note');
     } finally {
       setIsSavingNote(false);
     }
   };
 
-  const generateAiNextAction = async () => {
-    if (!lead) return;
-    setIsAiLoading(true);
-    try {
-      // Deduct Credits first (10 credits for diagnosis)
-      await AccountService.deductCredits(10);
-      
-      const result = await aiNextActionSuggestion({
-        name: lead.name,
-        email: lead.email,
-        phone: lead.phone,
-        company: lead.company,
-        source: lead.source,
-        status: lead.status as any,
-        priority: lead.priority as any,
-        notesHistory: lead.notesHistory?.map(n => ({ timestamp: n.timestamp || n.createdAt || '', note: n.content })) || [],
-        createdAt: lead.createdAt,
-      });
-      setAiSuggestion(result);
-      toast({ title: "Diagnosis Complete", description: "10 AI Credits used." });
-    } catch (error: any) {
-      console.error("AI Error:", error);
-      toast({ 
-        title: "AI Analysis Failed", 
-        description: error.message || "Could not generate suggestion at this time.", 
-        variant: "destructive" 
-      });
-    } finally {
-      setIsAiLoading(false);
-    }
-  };
+  if (!lead) {
+    return <div className="text-center py-20 text-muted-foreground">Loading lead...</div>;
+  }
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      <p className="text-muted-foreground animate-pulse">Fetching lead records...</p>
-    </div>
-  );
-  
-  if (!lead) return (
-    <div className="p-20 text-center space-y-4">
-      <h2 className="text-2xl font-bold">Lead not found</h2>
-      <Button asChild variant="outline"><Link href="/leads">Return to Lead Manager</Link></Button>
+  const DetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string | undefined }) => (
+    <div className="flex items-start gap-3">
+      <Icon className="w-4 h-4 mt-1 text-muted-foreground" />
+      <div>
+        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">{label}</p>
+        <p className="text-sm text-white font-medium">{value || 'Not provided'}</p>
+      </div>
     </div>
   );
 
   return (
-    <div className="space-y-6 pb-20">
-      <div className="flex flex-col gap-1">
-        <BackButton />
-        <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold font-headline text-white">{lead.name}</h1>
-                <Badge variant="outline" className={statusColors[lead.status]}>{lead.status}</Badge>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{lead.priority} Priority</Badge>
-              </div>
-              <p className="text-muted-foreground flex items-center gap-2 mt-1">
-                <Building2 className="w-4 h-4" /> {lead.company} • Added on {new Date(lead.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="gap-2 border-white/10 hover:bg-white/5 px-6 h-11" onClick={() => setIsEditDialogOpen(true)}>
-              <PenSquare className="w-4 h-4" /> Edit Profile
-            </Button>
-          </div>
+    <div className="space-y-6 pb-10">
+      <BackButton />
+
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold font-headline text-white">{lead.name}</h1>
+          <p className="text-muted-foreground mt-1.5">Lead details and activity timeline.</p>
         </div>
-      </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setIsEditing(!isEditing)}>
+            <Edit className="w-4 h-4"/>
+            {isEditing ? 'Cancel' : 'Edit'}
+          </Button>
+          <Button variant="destructive" className="gap-2" onClick={handleDeleteLead} disabled={isDeleting}>
+            <Trash2 className="w-4 h-4" />
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-white/[0.02] border-white/10 backdrop-blur-xl">
-              <CardContent className="p-6 space-y-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <Mail className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-0.5">Email Address</p>
-                    <p className="text-sm font-semibold text-white">{lead.email}</p>
-                  </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {isEditing ? (
+            <GlassCard>
+              <form onSubmit={handleSubmit(handleUpdateLead)} className="p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Input placeholder="Name" {...register('name')} />
+                  <Input placeholder="Email" {...register('email')} />
+                  <Input placeholder="Phone" {...register('phone')} />
+                  <Input placeholder="Company" {...register('company')} />
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <Phone className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-0.5">Phone Number</p>
-                    <p className="text-sm font-semibold text-white">{lead.phone || 'Not provided'}</p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                   <Controller
+                      name="status"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="New">New</SelectItem>
+                            <SelectItem value="Contacted">Contacted</SelectItem>
+                            <SelectItem value="Qualified">Qualified</SelectItem>
+                            <SelectItem value="Proposal Sent">Proposal Sent</SelectItem>
+                            <SelectItem value="Converted">Converted</SelectItem>
+                            <SelectItem value="Lost">Lost</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                   />
+                   <Controller
+                      name="priority"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                   />
+                   <Controller
+                      name="source"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Website">Website</SelectItem>
+                            <SelectItem value="Referral">Referral</SelectItem>
+                            <SelectItem value="Cold Call">Cold Call</SelectItem>
+                            <SelectItem value="Advertisement">Advertisement</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <Controller
+                      name="assignedTo"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger><SelectValue placeholder="Select an owner" /></SelectTrigger>
+                          <SelectContent>
+                             <SelectItem value="Unassigned">Unassigned</SelectItem>
+                             {adminName && <SelectItem value={adminName}>{adminName}</SelectItem>}
+                          </SelectContent>
+                        </Select>
+                      )}
+                   />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/[0.02] border-white/10 backdrop-blur-xl">
-              <CardContent className="p-6 space-y-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
-                    <Calendar className="w-5 h-5 text-violet-400" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-0.5">Follow-up Date</p>
-                    <p className="text-sm font-semibold text-white">{lead.followUpDate ? new Date(lead.followUpDate).toLocaleDateString() : 'None scheduled'}</p>
-                  </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                  <Button type="submit" disabled={isSubmitting}>Save Changes</Button>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
-                    <Building2 className="w-5 h-5 text-violet-400" />
+              </form>
+            </GlassCard>
+          ) : (
+            <GlassCard>
+              <div className="p-8 grid grid-cols-2 md:grid-cols-3 gap-8">
+                <DetailItem icon={User} label="Full Name" value={lead.name} />
+                <DetailItem icon={Mail} label="Email" value={lead.email} />
+                <DetailItem icon={Phone} label="Phone" value={lead.phone} />
+                <DetailItem icon={Building} label="Company" value={lead.company} />
+                <DetailItem icon={Calendar} label="Created At" value={new Date(lead.createdAt).toLocaleDateString()} />
+                <DetailItem icon={User} label="Owner" value={lead.assignedTo} />
+              </div>
+            </GlassCard>
+          )}
+          
+          <GlassCard>
+            <div className="p-8">
+              <h2 className="text-xl font-bold text-white mb-4">Activity Feed</h2>
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <Plus className="w-5 h-5" />
                   </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-0.5">Acquisition Source</p>
-                    <p className="text-sm font-semibold text-white">{lead.source}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="timeline" className="w-full">
-            <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl h-auto gap-1">
-              <TabsTrigger value="timeline" className="gap-2 px-6 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <History className="w-4 h-4" /> Activity Timeline
-              </TabsTrigger>
-              <TabsTrigger value="notes" className="gap-2 px-6 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                <MessageSquare className="w-4 h-4" /> Notes & Log
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="timeline" className="mt-6">
-              <Card className="bg-white/[0.01] border-white/5">
-                <CardContent className="p-8">
-                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-[19px] before:-translate-x-px before:h-full before:w-0.5 before:bg-white/5">
-                    {lead.statusHistory?.map((status, idx) => (
-                      <div key={`status-${idx}`} className="relative flex items-start justify-between gap-6 group">
-                        <div className="flex items-start gap-6">
-                          <div className="relative z-10 w-10 h-10 rounded-full bg-background border border-white/10 flex items-center justify-center group-hover:border-primary transition-colors">
-                            <History className="w-4 h-4 text-primary" />
-                          </div>
-                          <div className="pt-1">
-                            <p className="text-sm font-bold text-white">Pipeline Shift</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Status changed from <span className="text-white/80">{status.oldStatus}</span> to <span className="text-primary font-bold">{status.newStatus}</span>
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-bold text-muted-foreground bg-white/5 px-2 py-1 rounded border border-white/5 whitespace-nowrap">
-                          {new Date(status.timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
-                    ))}
-                    {lead.notesHistory?.map((note, idx) => (
-                      <div key={`note-${idx}`} className="relative flex items-start justify-between gap-6 group">
-                        <div className="flex items-start gap-6">
-                          <div className="relative z-10 w-10 h-10 rounded-full bg-background border border-white/10 flex items-center justify-center group-hover:border-accent transition-colors">
-                            <MessageSquare className="w-4 h-4 text-accent" />
-                          </div>
-                          <div className="pt-1">
-                            <p className="text-sm font-bold text-white">Note Logged</p>
-                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-md">{note.content}</p>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-bold text-muted-foreground bg-white/5 px-2 py-1 rounded border border-white/5 whitespace-nowrap">
-                          {new Date(note.createdAt || note.timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="notes" className="mt-6 space-y-6">
-              <Card className="bg-white/[0.02] border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-lg font-headline text-white">Log New Interaction</CardTitle>
-                  <CardDescription>Document calls, meetings, or general updates.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Textarea 
-                    placeholder="Briefly describe the interaction..." 
-                    className="min-h-[120px] bg-white/5 border-white/10 focus-visible:ring-primary rounded-xl resize-none"
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                  />
-                  <div className="flex justify-end gap-3">
-                    <Button variant="ghost" onClick={() => setNewNote("")} className="hover:bg-white/5">Clear</Button>
+                  <div className="flex-1">
+                    <Textarea 
+                      placeholder="Add a new note..." 
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      className="bg-white/5 border-white/10"
+                    />
                     <Button 
-                      className="bg-primary hover:bg-primary/90 min-w-[140px] h-11" 
+                      size="sm" 
+                      className="mt-2 float-right" 
                       onClick={handleAddNote}
-                      disabled={!newNote.trim() || isSavingNote}
+                      disabled={isSavingNote}
                     >
-                      {isSavingNote ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                      Save Entry
+                      {isSavingNote ? 'Saving...' : 'Save Note'}
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="space-y-6">
-          <Card className="bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-primary/20 shadow-2xl shadow-primary/10 overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-headline flex items-center gap-2 text-white">
-                  <Sparkles className="w-5 h-5 text-primary" /> Intelligence
-                </CardTitle>
-                <Badge className="bg-primary text-white text-[10px] font-bold px-2 py-0">AUTO</Badge>
-              </div>
-              <CardDescription className="text-primary/70 text-xs">Proprietary lead closing strategy</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {aiSuggestion ? (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div className="p-4 bg-black/40 rounded-xl border border-primary/10">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Next Step</p>
-                    <p className="text-sm font-semibold text-white leading-relaxed">{aiSuggestion.suggestedAction}</p>
-                  </div>
-                  <div className="space-y-2 px-1">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Analysis Reasoning</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed italic">"{aiSuggestion.reasoning}"</p>
-                  </div>
-                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] font-bold text-muted-foreground">Confidence: {aiSuggestion.confidenceScore}%</span>
+                </div>
+                {(lead.notes || []).sort((a: LeadNote, b: LeadNote) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((note: LeadNote) => (
+                  <div key={note._id} className="flex gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex-shrink-0 flex items-center justify-center text-muted-foreground">
+                      <Paperclip className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-white/90">{note.content}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(note.createdAt).toLocaleString()} by {note.author}
+                      </p>
                     </div>
                   </div>
-                </motion.div>
-              ) : (
-                <div className="py-6 text-center space-y-4">
-                  <p className="text-xs text-muted-foreground leading-relaxed px-4">
-                    Analyze behavioral history and status velocity to predict the optimal next move. (Costs 10 AI Credits)
-                  </p>
-                  <Button 
-                    onClick={generateAiNextAction} 
-                    disabled={isAiLoading}
-                    className="w-full bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 gap-2 h-12 font-bold transition-all"
-                  >
-                    {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Sparkles className="w-4 h-4" /> Run Diagnosis</>}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl bg-popover/95 backdrop-blur-2xl border-white/10 rounded-2xl p-0 overflow-hidden">
-          <form onSubmit={handleUpdateLead}>
-            <DialogHeader className="p-6 bg-white/[0.02] border-b border-white/5">
-              <DialogTitle className="text-xl font-bold font-headline text-white">Edit Profile</DialogTitle>
-              <DialogDescription>Update record details for {lead.name}</DialogDescription>
-            </DialogHeader>
-            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
-                <Input value={editData.name || ''} onChange={(e) => setEditData({...editData, name: e.target.value})} className="bg-white/5 border-white/10 h-11" required />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company</Label>
-                <Input value={editData.company || ''} onChange={(e) => setEditData({...editData, company: e.target.value})} className="bg-white/5 border-white/10 h-11" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                <Input value={editData.email || ''} onChange={(e) => setEditData({...editData, email: e.target.value})} className="bg-white/5 border-white/10 h-11" type="email" required />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Phone Number</Label>
-                <Input value={editData.phone || ''} onChange={(e) => setEditData({...editData, phone: e.target.value})} className="bg-white/5 border-white/10 h-11" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline Status</Label>
-                <Select value={editData.status} onValueChange={(v) => setEditData({...editData, status: v as LeadStatus})}>
-                  <SelectTrigger className="bg-white/5 border-white/10 h-11"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover border-white/10">
-                    <SelectItem value="New">New</SelectItem>
-                    <SelectItem value="Contacted">Contacted</SelectItem>
-                    <SelectItem value="Qualified">Qualified</SelectItem>
-                    <SelectItem value="Proposal Sent">Proposal Sent</SelectItem>
-                    <SelectItem value="Converted">Converted</SelectItem>
-                    <SelectItem value="Lost">Lost</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Priority</Label>
-                <Select value={editData.priority} onValueChange={(v) => setEditData({...editData, priority: v as LeadPriority})}>
-                  <SelectTrigger className="bg-white/5 border-white/10 h-11"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-popover border-white/10">
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Follow-Up Date</Label>
-                <Input 
-                  type="date" 
-                  value={editData.followUpDate || ''} 
-                  onChange={(e) => setEditData({...editData, followUpDate: e.target.value})} 
-                  className="bg-white/5 border-white/10 h-11 [color-scheme:dark]" 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Lead Source</Label>
-                <Input value={editData.source || ''} onChange={(e) => setEditData({...editData, source: e.target.value})} className="bg-white/5 border-white/10 h-11" />
+                ))}
               </div>
             </div>
-            <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3">
-              <Button type="button" variant="ghost" onClick={() => setIsEditDialogOpen(false)} className="hover:bg-white/5">Cancel</Button>
-              <Button type="submit" className="bg-primary hover:bg-primary/90 px-8 min-w-[140px]" disabled={isUpdatingLead}>
-                {isUpdatingLead ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />} Update Record
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </GlassCard>
+        </div>
+
+        <aside className="space-y-6">
+          <GlassCard>
+            <div className="p-6 space-y-4">
+              <h3 className="text-lg font-bold text-white">Lead Properties</h3>
+              <div className="space-y-3">
+                 <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge variant="outline" className="border-green-500/20 bg-green-500/10 text-green-400">{lead.status}</Badge>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Priority</span>
+                  <Badge variant="outline" className="border-red-500/20 bg-red-500/10 text-red-400">{lead.priority}</Badge>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Source</span>
+                  <span className="text-white font-medium">{lead.source}</span>
+                </div>
+              </div>
+            </div>
+          </GlassCard>
+        </aside>
+      </div>
     </div>
   );
 }

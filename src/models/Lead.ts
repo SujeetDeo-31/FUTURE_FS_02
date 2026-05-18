@@ -1,17 +1,27 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
-import { LeadStatus, LeadPriority } from '@/types/crm';
+import mongoose, { Document, Model, Schema, Types } from 'mongoose';
+
+export interface ILeadNote extends Document {
+  content: string;
+  author: string;
+  createdAt: Date;
+}
+
+const LeadNoteSchema: Schema = new Schema({
+  content: { type: String, required: true },
+  author: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
 
 export interface ILead extends Document {
   name: string;
   email: string;
-  phone: string;
-  company: string;
+  phone?: string;
+  company?: string;
   source: string;
-  status: LeadStatus;
-  priority: LeadPriority;
+  status: 'New' | 'Contacted' | 'Qualified' | 'Proposal Sent' | 'Converted' | 'Lost';
+  priority: 'Low' | 'Medium' | 'High';
   assignedTo: string;
-  notes: string;
-  followUpDate?: Date;
+  notes: Types.DocumentArray<ILeadNote>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,9 +43,8 @@ const LeadSchema: Schema = new Schema({
     enum: ['Low', 'Medium', 'High'],
     default: 'Medium' 
   },
-  assignedTo: { type: String, default: 'Unassigned' },
-  notes: { type: String },
-  followUpDate: { type: Date },
+  assignedTo: { type: String, default: 'Unassigned', index: true },
+  notes: [LeadNoteSchema]
 }, { 
   timestamps: true 
 });

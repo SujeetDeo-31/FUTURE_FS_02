@@ -1,54 +1,30 @@
-
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
-import Note from '@/models/Note';
-import Activity from '@/models/Activity';
-import { createNoteSchema } from '@/lib/validation';
-import {
-  successResponse,
-  errorResponse,
-  validationErrorResponse,
-} from '@/lib/api-helpers';
-import { withApiAuth } from '@/lib/auth-utils';
 
-async function postHandler(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  await dbConnect();
   try {
-    await dbConnect();
-    const { id } = await params;
-    const body = await request.json();
+    const { content, authorName } = await request.json();
 
-    const validation = createNoteSchema.safeParse(body);
-    if (!validation.success) {
-      return validationErrorResponse(validation.error.formErrors.fieldErrors);
+    if (!content || !authorName) {
+      return NextResponse.json({ message: 'Content and author are required' }, { status: 400 });
     }
 
-    const lead = await Lead.findById(id);
+    const lead = await Lead.findById(params.id);
+
     if (!lead) {
-      return errorResponse('Lead not found', 404);
+      return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
     }
 
-    const note = await Note.create({
-      leadId: id,
-      ...validation.data,
-    });
+    lead.notes.push({ content, author: authorName });
+    await lead.save();
 
-    await Activity.create({
-      type: 'note',
-      leadId: id,
-      leadName: lead.name,
-      content: `Note added: ${validation.data.content.substring(0, 50)}${
-        validation.data.content.length > 50 ? '...' : ''
-      }`,
-    });
-
-    return successResponse(note, 201);
-  } catch (error: any) {
-    return errorResponse(error.message);
+    return NextResponse.json(lead, { status: 201 });
+  } catch (error) {
+    if (error instanceof Error) {
+        return NextResponse.json({ message: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ message: 'Server error' }, { status: 500 });
   }
 }
-
-export const POST = withApiAuth(postHandler);

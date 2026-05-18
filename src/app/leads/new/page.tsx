@@ -1,207 +1,275 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  Save, 
-  User, 
-  Building2, 
-  Mail, 
-  Phone,
-  Calendar as CalendarIcon
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { GlassCard } from "@/components/shared/glass-card";
-import { LeadService } from "@/services/lead-service";
-import { useToast } from "@/hooks/use-toast";
-import { LeadStatus, LeadPriority } from "@/types/crm";
-import { BackButton } from "@/components/shared/back-button";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { motion } from 'framer-motion';
+import { LeadService } from '@/services/lead-service';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, UserPlus } from 'lucide-react';
+import { GlassCard } from '@/components/shared/glass-card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { BackButton } from '@/components/shared/back-button';
+import { useEffect, useState } from 'react';
+import { AccountService } from '@/services/account-service';
+
+const leadFormSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters long.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  source: z.string(),
+  status: z.enum(['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Converted', 'Lost']),
+  priority: z.enum(['Low', 'Medium', 'High']),
+  assignedTo: z.string(),
+  notes: z.string().optional(),
+});
 
 export default function NewLeadPage() {
   const router = useRouter();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [adminName, setAdminName] = useState<string | null>(null);
 
-  const [status, setStatus] = useState<LeadStatus>("New");
-  const [priority, setPriority] = useState<LeadPriority>("Medium");
-  const [source, setSource] = useState("Website");
-  const [followUpDate, setFollowUpDate] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (loading) return;
-    
-    setLoading(true);
-
-    const formData = new FormData(e.currentTarget);
-    const data = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      company: formData.get("company") as string,
-      phone: formData.get("phone") as string,
-      source: source,
-      priority: priority,
-      status: status,
-      notes: formData.get("notes") as string,
-      followUpDate: followUpDate || undefined,
+  useEffect(() => {
+    const fetchAdmin = async () => {
+      try {
+        const admin = await AccountService.getAccount();
+        if (admin && admin.name) {
+          setAdminName(admin.name);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin user:", error);
+      }
     };
+    fetchAdmin();
+  }, []);
 
+  const form = useForm<z.infer<typeof leadFormSchema>>({
+    resolver: zodResolver(leadFormSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      source: 'Website',
+      status: 'New',
+      priority: 'Medium',
+      assignedTo: 'Unassigned',
+      notes: '',
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof leadFormSchema>) => {
+    setIsSubmitting(true);
     try {
-      const newLead = await LeadService.createLead(data);
-      toast({
-        title: "Success",
-        description: `Lead for ${newLead.name} created successfully.`,
-      });
-      router.push(`/leads/${newLead._id || newLead.id}`);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create lead. Please try again.",
-        variant: "destructive",
-      });
-      setLoading(false);
+      const { notes, ...leadData } = values;
+      const newLead = await LeadService.createLead(leadData);
+
+      if (notes && newLead._id) {
+        await LeadService.addNote(newLead._id, notes);
+      }
+      
+      toast.success('Lead created successfully!');
+      router.push(`/leads/${newLead._id}`);
+    } catch (error) {
+      console.error('Failed to create lead:', error);
+      toast.error('Failed to create lead. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
+    <div className="space-y-6 pb-10">
       <BackButton />
-      
       <div>
-        <h1 className="text-3xl font-bold font-headline text-white tracking-tight">Create New Lead</h1>
-        <p className="text-muted-foreground mt-1">Add a new prospect to your sales pipeline.</p>
+        <h1 className="text-4xl font-bold font-headline text-white">Create New Lead</h1>
+        <p className="text-muted-foreground mt-1.5">Fill out the form below to add a new lead to your pipeline.</p>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <GlassCard>
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Full Name</Label>
-                    <div className="relative group">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                      <Input id="name" name="name" required placeholder="e.g. John Doe" className="pl-10 bg-white/5 border-white/10 h-11" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="company" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Company</Label>
-                    <div className="relative group">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                      <Input id="company" name="company" placeholder="e.g. Acme Inc" className="pl-10 bg-white/5 border-white/10 h-11" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email Address</Label>
-                    <div className="relative group">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                      <Input id="email" name="email" type="email" required placeholder="john@example.com" className="pl-10 bg-white/5 border-white/10 h-11" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone Number</Label>
-                    <div className="relative group">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                      <Input id="phone" name="phone" placeholder="+1 (555) 000-0000" className="pl-10 bg-white/5 border-white/10 h-11" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="notes" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Internal Notes</Label>
-                  <Textarea id="notes" name="notes" placeholder="Initial context, project requirements, etc..." className="min-h-[120px] bg-white/5 border-white/10 resize-none" />
-                </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <GlassCard>
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., john.doe@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., (123) 456-7890" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="company"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Example Inc." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </GlassCard>
-          </div>
+            </div>
+          </GlassCard>
 
-          <div className="space-y-6">
-            <GlassCard>
-              <div className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pipeline Stage</Label>
-                  <Select value={status} onValueChange={(v) => setStatus(v as LeadStatus)}>
-                    <SelectTrigger className="bg-white/5 border-white/10 h-11">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="New">New</SelectItem>
-                      <SelectItem value="Contacted">Contacted</SelectItem>
-                      <SelectItem value="Qualified">Qualified</SelectItem>
-                      <SelectItem value="Proposal Sent">Proposal Sent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Priority Level</Label>
-                  <Select value={priority} onValueChange={(v) => setPriority(v as LeadPriority)}>
-                    <SelectTrigger className="bg-white/5 border-white/10 h-11">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Low">Low Priority</SelectItem>
-                      <SelectItem value="Medium">Medium Priority</SelectItem>
-                      <SelectItem value="High">High Priority</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Follow-Up Date</Label>
-                  <div className="relative group">
-                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <Input 
-                      type="date" 
-                      value={followUpDate}
-                      onChange={(e) => setFollowUpDate(e.target.value)}
-                      className="pl-10 bg-white/5 border-white/10 h-11 [color-scheme:dark]" 
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Lead Source</Label>
-                  <Select value={source} onValueChange={setSource}>
-                    <SelectTrigger className="bg-white/5 border-white/10 h-11">
-                      <SelectValue placeholder="Select source" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Website">Website Form</SelectItem>
-                      <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                      <SelectItem value="Referral">Referral</SelectItem>
-                      <SelectItem value="Event">Event / Trade Show</SelectItem>
-                      <SelectItem value="Cold Outreach">Cold Outreach</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          <GlassCard>
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                 <FormField
+                  control={form.control}
+                  name="source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Source</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Select a source" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Website">Website</SelectItem>
+                          <SelectItem value="Referral">Referral</SelectItem>
+                          <SelectItem value="Cold Call">Cold Call</SelectItem>
+                           <SelectItem value="Advertisement">Advertisement</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Select a status" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="New">New</SelectItem>
+                          <SelectItem value="Contacted">Contacted</SelectItem>
+                          <SelectItem value="Qualified">Qualified</SelectItem>
+                           <SelectItem value="Proposal Sent">Proposal Sent</SelectItem>
+                          <SelectItem value="Converted">Converted</SelectItem>
+                           <SelectItem value="Lost">Lost</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Priority</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Select a priority" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Low">Low</SelectItem>
+                          <SelectItem value="Medium">Medium</SelectItem>
+                          <SelectItem value="High">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="assignedTo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Owner</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Select an owner" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Unassigned">Unassigned</SelectItem>
+                          {adminName && <SelectItem value={adminName}>{adminName}</SelectItem>}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </GlassCard>
+              <div className="mt-6">
+                 <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Add any relevant notes about the lead..."
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </GlassCard>
 
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 gap-2 relative z-10"
-            >
-              {loading ? "Creating..." : <><Save className="w-5 h-5" /> Create Lead</>}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating Lead...' : 'Create Lead'}
             </Button>
           </div>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   );
 }

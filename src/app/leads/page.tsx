@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Trash2,
   X,
-  AlertCircle
+  AlertCircle,
+  User
 } from "lucide-react";
 import { 
   Table, 
@@ -46,10 +47,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { LeadStatus, LeadPriority, Lead } from "@/types/crm";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/shared/back-button";
+import { AccountService } from "@/services/account-service";
+import { LeadService } from "@/services/lead-service";
 
 const statusColors: Record<LeadStatus, string> = {
   New: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -67,34 +70,41 @@ const priorityColors: Record<LeadPriority, string> = {
 };
 
 export default function LeadsPage() {
-  const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [adminName, setAdminName] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const fetchLeads = async () => {
+  const fetchLeadsAndAdmin = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/leads');
-      if (!response.ok) throw new Error('Failed to fetch leads');
-      const data = await response.json();
-      setLeads(data);
+      const [leadsData, admin] = await Promise.all([
+        LeadService.getLeads(),
+        AccountService.getAccount()
+      ]);
+
+      setLeads(leadsData);
+
+      if (admin && admin.name) {
+        setAdminName(admin.name);
+      }
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast.error(err.message || "Error fetching data");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchLeads();
+    fetchLeadsAndAdmin();
   }, []);
 
   useEffect(() => {
@@ -111,10 +121,11 @@ export default function LeadsPage() {
       const matchesSearch = nameMatch || companyMatch || emailMatch;
       const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
       const matchesPriority = priorityFilter === "all" || lead.priority === priorityFilter;
+      const matchesOwner = ownerFilter === "all" || lead.assignedTo === ownerFilter;
 
-      return matchesSearch && matchesStatus && matchesPriority;
+      return matchesSearch && matchesStatus && matchesPriority && matchesOwner;
     });
-  }, [leads, debouncedSearch, statusFilter, priorityFilter]);
+  }, [leads, debouncedSearch, statusFilter, priorityFilter, ownerFilter]);
 
   const paginatedLeads = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -127,7 +138,8 @@ export default function LeadsPage() {
     if (selectedLeads.length === paginatedLeads.length && paginatedLeads.length > 0) {
       setSelectedLeads([]);
     } else {
-      setSelectedLeads(paginatedLeads.map(l => l._id || l.id));
+      const allLeadIds = paginatedLeads.map(l => l._id).filter((id): id is string => !!id);
+      setSelectedLeads(allLeadIds);
     }
   };
 
@@ -139,15 +151,13 @@ export default function LeadsPage() {
 
   const handleBulkDelete = async () => {
     try {
-      for (const id of selectedLeads) {
-        await fetch(`/api/leads/${id}`, { method: 'DELETE' });
-      }
-      toast({ title: "Success", description: `Deleted ${selectedLeads.length} leads.` });
-      fetchLeads();
+      await Promise.all(selectedLeads.map(id => LeadService.deleteLead(id)));
+      toast.success(`Deleted ${selectedLeads.length} leads.`);
+      fetchLeadsAndAdmin();
       setSelectedLeads([]);
       setIsDeleteDialogOpen(false);
     } catch (error) {
-      toast({ title: "Error", description: "Bulk delete failed.", variant: "destructive" });
+      toast.error("Bulk delete failed.");
     }
   };
 
@@ -156,8 +166,24 @@ export default function LeadsPage() {
     setDebouncedSearch("");
     setStatusFilter("all");
     setPriorityFilter("all");
+    setOwnerFilter("all");
     setCurrentPage(1);
-    toast({ title: "Filters Reset", description: "Showing all active leads." });
+    toast.info("Filters reset.");
+  };
+
+  const getInitials = (name: string | null | undefined): string => {
+    if (!name) return "U";
+    const parts = name.split(' ').filter(p => p.length > 0);
+    if (parts.length > 1 && parts[0] && parts[parts.length - 1]) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    if (name.length > 1) {
+      return name.substring(0, 2).toUpperCase();
+    }
+    if (name.length === 1) {
+      return name.toUpperCase();
+    }
+    return "U";
   };
 
   return (
@@ -189,6 +215,20 @@ export default function LeadsPage() {
           </div>
           
           <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0 no-scrollbar">
+             <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+              <SelectTrigger className="w-[180px] h-11 bg-white/[0.03] border-white/10 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-muted-foreground" />
+                  <SelectValue placeholder="Owner" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-popover/95 backdrop-blur-xl border-white/10">
+                <SelectItem value="all">All Owners</SelectItem>
+                <SelectItem value="Unassigned">Unassigned</SelectItem>
+                {adminName && <SelectItem value={adminName}>{adminName}</SelectItem>}
+              </SelectContent>
+            </Select>
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[160px] h-11 bg-white/[0.03] border-white/10 rounded-xl">
                 <div className="flex items-center gap-2">
@@ -294,8 +334,8 @@ export default function LeadsPage() {
                   >
                     <TableCell className="py-4 pl-6">
                       <Checkbox 
-                        checked={selectedLeads.includes(lead._id || lead.id)}
-                        onCheckedChange={() => toggleSelectLead(lead._id || lead.id)}
+                        checked={selectedLeads.includes(lead._id || ' ')}
+                        onCheckedChange={() => toggleSelectLead(lead._id || ' ')}
                         className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                     </TableCell>
@@ -327,8 +367,8 @@ export default function LeadsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-white/10 to-transparent flex items-center justify-center text-[10px] font-bold text-primary ring-1 ring-white/10 shadow-inner">
-                          {lead.assignedTo?.charAt(0) || 'U'}
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-white/10 to-transparent flex items-center justify-center text-xs font-bold text-primary ring-1 ring-white/10 shadow-inner">
+                          {getInitials(lead.assignedTo)}
                         </div>
                         <span className="text-xs font-medium text-white/70">{lead.assignedTo || 'Unassigned'}</span>
                       </div>

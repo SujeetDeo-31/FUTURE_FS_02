@@ -1,8 +1,24 @@
 'use client';
 
-import { Lead, LeadStatus } from '@/types/crm';
+import { Lead } from '@/types/crm';
 
 export const LeadService = {
+  getLeads: async (): Promise<Lead[]> => {
+    const response = await fetch('/api/leads');
+    if (!response.ok) {
+      throw new Error('Failed to fetch leads');
+    }
+    return response.json();
+  },
+
+  getLeadById: async (id: string): Promise<Lead> => {
+    const response = await fetch(`/api/leads/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch lead');
+    }
+    return response.json();
+  },
+
   createLead: async (data: Partial<Lead>) => {
     const response = await fetch('/api/leads', {
       method: 'POST',
@@ -23,19 +39,29 @@ export const LeadService = {
     return response.json();
   },
 
-  addNote: async (leadId: string, content: string) => {
-    const response = await fetch(`/api/leads/${leadId}/notes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, authorName: 'Admin' }),
+  deleteLead: async (leadId: string) => {
+    const response = await fetch(`/api/leads/${leadId}`, {
+      method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to add note');
-    return response.json();
+    if (!response.ok) {
+        throw new Error('Failed to delete lead');
+    }
+    return response.json().catch(() => ({})); 
   },
 
-  seedSampleData: async () => {
-    const response = await fetch('/api/seed', { method: 'POST' });
-    if (!response.ok) throw new Error('Failed to seed sample data');
-    return response.json();
-  }
+  addNote: async (leadId: string, content: string) => {
+      const response = await fetch(`/api/leads/${leadId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, authorName: 'Admin' }),
+      });
+      if (!response.ok) throw new Error('Failed to add note');
+      return response.json();
+    },
+
+    seedSampleData: async () => {
+      const response = await fetch('/api/seed', { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to seed sample data');
+      return response.json();
+    }
 };
