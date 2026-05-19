@@ -12,13 +12,13 @@ import { LeadService } from '@/services/lead-service';
 import { AccountService } from '@/services/account-service';
 import { summarizeLeadActivity } from '@/ai/flows/ai-lead-activity-summary';
 import { aiNextActionSuggestion } from '@/ai/flows/ai-next-action-suggestion';
+import { aiPersonalizedEmailDraft } from '@/ai/flows/ai-personalized-email-draft';
 import { 
   User, 
   Mail, 
   Phone, 
   Building, 
   Calendar, 
-  Plus, 
   Trash2,
   Edit,
   Sparkles,
@@ -28,7 +28,9 @@ import {
   Loader2,
   Check,
   Send,
-  Trash
+  Trash,
+  Copy,
+  PenTool
 } from 'lucide-react';
 
 import { GlassCard } from '@/components/shared/glass-card';
@@ -77,6 +79,8 @@ export default function LeadDetailPage() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const [isDrafting, setIsDrafting] = useState(false);
+  const [aiDraft, setAiDraft] = useState<{ subject: string; body: string } | null>(null);
 
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<z.infer<typeof leadSchema>>({
     resolver: zodResolver(leadSchema)
@@ -145,8 +149,8 @@ export default function LeadDetailPage() {
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    setDeletingNoteId(noteId);
     try {
+      setDeletingNoteId(noteId);
       const updatedLead = await LeadService.deleteNote(leadId, noteId);
       setLead(updatedLead);
       toast.success('Activity removed');
@@ -201,6 +205,36 @@ export default function LeadDetailPage() {
     } finally {
       setIsSuggesting(false);
     }
+  };
+
+  const handleGenerateDraft = async () => {
+    if (!lead) return;
+    setIsDrafting(true);
+    try {
+      await AccountService.deductCredits(10);
+      const result = await aiPersonalizedEmailDraft({
+        leadName: lead.name,
+        leadEmail: lead.email,
+        leadCompany: lead.company || 'Unknown Company',
+        leadSource: lead.source,
+        leadStatus: lead.status as any,
+        leadNotes: lead.notes.map(n => n.content).join('\n'),
+        recentInteractionsSummary: aiSummary || 'Recent interactions are captured in the activity feed.',
+        callToAction: lead.status === 'Proposal Sent' ? 'Review the proposal and schedule a feedback call.' : 'Schedule a discovery meeting.'
+      });
+      setAiDraft(result);
+      window.dispatchEvent(new Event('profileUpdated'));
+      toast.success('Email draft ready (10 credits)');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to draft email');
+    } finally {
+      setIsDrafting(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
   };
 
   if (!lead) {
@@ -516,6 +550,67 @@ export default function LeadDetailPage() {
                   </div>
                 </GlassCard>
               </div>
+
+              <GlassCard className="bg-emerald-500/[0.03] border-emerald-500/20">
+                <div className="p-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">
+                        <PenTool className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Email Outreach Draft</h3>
+                        <p className="text-xs text-muted-foreground mt-1">AI-generated personalized engagement template</p>
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-9 px-4 text-xs font-bold uppercase tracking-widest bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/10 rounded-lg" 
+                      onClick={handleGenerateDraft} 
+                      disabled={isDrafting}
+                    >
+                      {isDrafting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : null}
+                      Draft Email
+                    </Button>
+                  </div>
+
+                  <AnimatePresence mode="wait">
+                    {aiDraft ? (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                        <div className="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/5">
+                          <div className="flex-1">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Subject Line</p>
+                            <p className="text-sm text-white font-medium">{aiDraft.subject}</p>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-emerald-400" onClick={() => copyToClipboard(aiDraft.subject)}>
+                            <Copy className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                        <div className="relative group">
+                          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-emerald-400 bg-black/40" onClick={() => copyToClipboard(aiDraft.body)}>
+                              <Copy className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          <Textarea 
+                            readOnly 
+                            value={aiDraft.body} 
+                            className="bg-black/40 border-white/5 min-h-[250px] resize-none text-sm text-white/90 leading-relaxed font-medium p-6 rounded-xl"
+                          />
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <div className="py-20 text-center space-y-4 border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
+                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-dashed border-white/20 mx-auto">
+                            <Mail className="w-6 h-6 text-muted-foreground/40" />
+                        </div>
+                        <p className="text-sm text-muted-foreground/60 max-w-[280px] mx-auto leading-relaxed">Generate a context-aware follow-up email tailored to this lead's current pipeline status.</p>
+                      </div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </GlassCard>
             </TabsContent>
           </Tabs>
         </div>
@@ -577,7 +672,7 @@ export default function LeadDetailPage() {
                 Nurture Assistant
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Need help closing this lead? The AI Insights tab uses interaction history to suggest communication strategies.
+                Need help closing this lead? The AI Insights tab uses interaction history to suggest communication strategies and draft personalized emails.
               </p>
               <div className="flex items-center gap-2 text-indigo-400 font-bold text-[10px] uppercase tracking-widest">
                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
