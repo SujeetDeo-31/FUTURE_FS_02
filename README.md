@@ -4,7 +4,7 @@ LeadFlow CRM is a professional, AI-powered CRM dashboard designed for modern sal
 
 ## 🚀 Features
 
-- **Intelligence Hub**: Generate deep-scan strategic performance reports powered by Gemini AI.
+- **Intelligence Hub**: Generate scanned strategic performance reports powered by Gemini AI.
 - **Lead Management System**: Create, track, and organize leads with dynamic status and priority management.
 - **AI Insights & Suggestions**:
   - **Executive Briefs**: Contextual summaries of a lead's entire activity history.
@@ -17,7 +17,7 @@ LeadFlow CRM is a professional, AI-powered CRM dashboard designed for modern sal
 - **Secure Authentication**: Robust admin authentication system powered by NextAuth.
 - **Settings Management**: Centralized management of user profiles, bios, and platform preferences.
 - **Toast Notifications**: Professional action-based feedback for all critical system interactions.
-- **Responsive Dark SaaS UI**: High-end glassmorphism design built with Tailwind CSS and Framer Motion.
+- **Responsive Dark SaaS UI**: Built with Tailwind CSS and Framer Motion.
 
 ## 🛠️ Tech Stack
 
@@ -77,17 +77,15 @@ LeadFlow CRM is a professional, AI-powered CRM dashboard designed for modern sal
    ```bash
    npm run build
    ```
+## 📁 Core Modules
 
-## 📸 Screenshots
-
-*(Sections for demo images)*
-- **Dashboard Workspace**: [Placeholder for Dashboard Screenshot]
-- **Lead Intelligence**: [Placeholder for Lead Detail Screenshot]
-- **Strategic Reports**: [Placeholder for Reports Screenshot]
+- Dashboard Analytics
+- Lead Management
+- AI Intelligence Hub
+- Report Generation
+- Settings Management
+- Authentication System
 
 ## 🚀 Deployment
 
 The project is designed for seamless deployment on **Vercel**. Ensure all environment variables are configured in your Vercel project settings before deploying.
-
----
-Built for performance. Powered by AI.
