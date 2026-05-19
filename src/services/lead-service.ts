@@ -49,15 +49,23 @@ export const LeadService = {
     return response.json().catch(() => ({})); 
   },
 
-  addNote: async (leadId: string, content: string) => {
+  addNote: async (leadId: string, content: string, author: string = 'Admin') => {
       const response = await fetch(`/api/leads/${leadId}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, authorName: 'Admin' }),
+        body: JSON.stringify({ content, authorName: author }),
       });
       if (!response.ok) throw new Error('Failed to add note');
       return response.json();
     },
+
+  deleteNote: async (leadId: string, noteId: string) => {
+    const response = await fetch(`/api/leads/${leadId}/notes/${noteId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete note');
+    return response.json();
+  },
 
     seedSampleData: async () => {
       const response = await fetch('/api/seed', { method: 'POST' });
