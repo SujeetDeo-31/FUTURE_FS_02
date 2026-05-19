@@ -46,7 +46,36 @@ const prompt = ai.definePrompt({
   name: 'aiLeadActivitySummaryPrompt',
   input: {schema: AiLeadActivitySummaryInputSchema},
   output: {schema: AiLeadActivitySummaryOutputSchema},
-  prompt: `You are an AI assistant tasked with summarizing the activity history for a lead named "{{leadName}}".\nReview the provided notes, status changes, and follow-up history to create a highly concise, factual executive summary of the lead's current situation.\nHighlight only the most important interaction and the current state.\nThe summary MUST be a concise 2-3 sentence overview.\n\n---\nLead Name: {{leadName}}\n\nNotes History:\n{{#each notes}}\n- [{{this.timestamp}}] Note: {{{this.content}}}\n{{else}}\n(No notes available)\n{{/each}}\n\nStatus Change History:\n{{#each statusHistory}}\n- [{{this.timestamp}}] Status changed from '{{this.oldStatus}}' to '{{this.newStatus}}'\n{{else}}\n(No status changes recorded)\n{{/each}}\n\nFollow-up History:\n{{#each followUpHistory}}\n- [{{this.timestamp}}] Action: {{{this.action}}} (Outcome: {{{this.outcome}}})\n{{else}}\n(No follow-up history)\n{{/each}}\n---\n\nGenerate the concise summary below:`,
+  prompt: `You are an AI assistant tasked with summarizing the activity history for a lead named "{{leadName}}".
+
+Review the provided notes, status changes, and follow-up history. Generate a highly concise, 2-3 sentence executive summary focusing on the current state and most critical interaction.
+
+---
+Lead Name: {{leadName}}
+
+Notes History:
+{{#each notes}}
+- [{{this.timestamp}}] Note: {{{this.content}}}
+{{else}}
+(No notes available)
+{{/each}}
+
+Status Change History:
+{{#each statusHistory}}
+- [{{this.timestamp}}] Status changed from '{{this.oldStatus}}' to '{{this.newStatus}}'
+{{else}}
+(No status changes recorded)
+{{/each}}
+
+Follow-up History:
+{{#each followUpHistory}}
+- [{{this.timestamp}}] Action: {{{this.action}}} (Outcome: {{{this.outcome}}})
+{{else}}
+(No follow-up history)
+{{/each}}
+---
+
+Summary:`,
 });
 
 // Flow definition

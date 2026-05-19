@@ -63,25 +63,15 @@ export type AiNextActionSuggestionInput = z.infer<
 const AiNextActionSuggestionOutputSchema = z.object({
   suggestedAction: z
     .string()
-    .describe('A concise suggestion for the next best action to take.'),
+    .describe('A short, actionable next step.'),
   reasoning: z
     .string()
-    .describe('A brief explanation (max 2 sentences) behind the suggested action.'),
+    .describe('A brief explanation (max 2 sentences) behind the suggestion.'),
   confidenceScore: z
     .number()
     .min(0)
     .max(100)
     .describe('A score (0-100) indicating the confidence in the suggestion.'),
-  suggestedCommunicationStrategy: z
-    .string()
-    .optional()
-    .describe('Tips on how to communicate effectively with the lead.'),
-  suggestedFollowUpDate: z
-    .string()
-    .optional()
-    .describe(
-      'A recommended date for the next follow-up. Format: YYYY-MM-DD.'
-    ),
 });
 
 export type AiNextActionSuggestionOutput = z.infer<
@@ -98,19 +88,20 @@ const nextActionSuggestionPrompt = ai.definePrompt({
   name: 'nextActionSuggestionPrompt',
   input: {schema: AiNextActionSuggestionInputSchema},
   output: {schema: AiNextActionSuggestionOutputSchema},
-  prompt: `You are an expert CRM assistant. Analyze the lead's information and suggest a highly actionable next move.
+  prompt: `You are an expert CRM assistant. Analyze the lead's information and suggest a highly actionable, concise next step to drive conversion.
 
 Lead Details:
 Name: {{{name}}}
 Company: {{{company}}}
 Status: {{{status}}}
 Priority: {{{priority}}}
+
 Interaction History:
 {{#each notesHistory}}
 - {{{timestamp}}}: {{{note}}}
 {{/each}}
 
-Based on this, provide a concise suggested action and a brief reasoning (max 2 sentences). Keep the tone professional and focused on conversion.`,
+Provide a short, direct suggested action and a brief reasoning (max 2 sentences). Tone: Professional, focused, and data-driven.`,
 });
 
 const aiNextActionSuggestionFlow = ai.defineFlow(

@@ -177,7 +177,7 @@ export default function LeadDetailPage() {
       });
       setAiSummary(result.summary);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Summary generated');
+      toast.success('Briefing generated');
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate summary');
     } finally {
@@ -202,7 +202,7 @@ export default function LeadDetailPage() {
       });
       setAiSuggestion(result);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Strategy analyzed');
+      toast.success('Strategy updated');
     } catch (error: any) {
       toast.error(error.message || 'Failed to get suggestion');
     } finally {
@@ -477,7 +477,7 @@ export default function LeadDetailPage() {
                           </div>
                           <h3 className="text-sm font-bold text-white uppercase tracking-widest">Strategic Path</h3>
                         </div>
-                        <p className="text-xs text-muted-foreground">Predictive next move</p>
+                        <p className="text-xs text-muted-foreground">Next best action</p>
                       </div>
                       <Button size="sm" variant="ghost" className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary/20 text-primary border border-primary/10 rounded-lg" onClick={handleGetSuggestion} disabled={isSuggesting}>
                         {isSuggesting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
@@ -504,14 +504,14 @@ export default function LeadDetailPage() {
                                 <span className="text-xs font-bold text-primary">{aiSuggestion.confidenceScore}%</span>
                               </div>
                               <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                <motion.div initial={{ width: 0 }} animate={{ width: `${aiSuggestion.confidenceScore}%` }} className="h-full bg-gradient-to-r from-primary/60 to-primary" />
+                                <motion.div initial={{ width: 0 }} animate={{ width: `${aiSuggestion.confidenceScore}%` }} className="h-full bg-primary" />
                               </div>
                             </div>
                           </motion.div>
                         ) : (
                           <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center space-y-4 border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
-                            <Zap className="w-8 h-8 text-muted-foreground/20" />
-                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Predictive analytics for optimal pipeline conversion.</p>
+                            <Zap className="w-8 h-8 text-primary/30" />
+                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Predictive strategy for optimal conversion.</p>
                           </div>
                         )}
                       </AnimatePresence>
@@ -530,7 +530,7 @@ export default function LeadDetailPage() {
                           </div>
                           <h3 className="text-sm font-bold text-white uppercase tracking-widest">Executive Brief</h3>
                         </div>
-                        <p className="text-xs text-muted-foreground">Concise context</p>
+                        <p className="text-xs text-muted-foreground">Lead summary</p>
                       </div>
                       <Button size="sm" variant="ghost" className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary/20 text-primary border border-primary/10 rounded-lg" onClick={handleGenerateSummary} disabled={isSummarizing}>
                         {isSummarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
@@ -547,8 +547,8 @@ export default function LeadDetailPage() {
                           </motion.div>
                         ) : (
                           <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center space-y-4 border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
-                            <MessageSquare className="w-8 h-8 text-muted-foreground/20" />
-                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Condense activity history into an executive summary.</p>
+                            <MessageSquare className="w-8 h-8 text-primary/30" />
+                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Condense activity history into a brief summary.</p>
                           </div>
                         )}
                       </AnimatePresence>
@@ -568,7 +568,7 @@ export default function LeadDetailPage() {
                         </div>
                         <h3 className="text-sm font-bold text-white uppercase tracking-widest">Outreach Assistant</h3>
                       </div>
-                      <p className="text-xs text-muted-foreground">Personalized engagement</p>
+                      <p className="text-xs text-muted-foreground">Draft outreach</p>
                     </div>
                     <Button 
                       size="sm" 
@@ -609,7 +609,7 @@ export default function LeadDetailPage() {
                       </motion.div>
                     ) : (
                       <div className="py-24 text-center space-y-5 border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
-                        <Mail className="w-10 h-10 text-muted-foreground/15 mx-auto" />
+                        <Mail className="w-10 h-10 text-primary/15 mx-auto" />
                         <div className="space-y-1">
                           <p className="text-sm text-white/40 font-bold">No draft generated</p>
                           <p className="text-xs text-muted-foreground/50 max-w-[300px] mx-auto leading-relaxed">Create a tailored follow-up based on the lead's unique journey.</p>
@@ -688,12 +688,12 @@ export default function LeadDetailPage() {
                       Nurture Assistant
                     </h3>
                     <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-                      The AI Insight suite uses this lead's interaction history to generate high-conversion strategies and personalized outreach.
+                      The AI Insight suite uses interaction history to generate high-conversion strategies and personalized outreach.
                     </p>
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border border-primary/10">
                       <Info className="w-4 h-4 text-primary shrink-0" />
                       <p className="text-[10px] font-bold text-primary uppercase tracking-widest leading-normal">
-                        Gemini 2.5 Flash Insight
+                        Gemini Insight Engine
                       </p>
                     </div>
                   </div>
