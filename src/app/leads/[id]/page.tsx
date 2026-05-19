@@ -357,6 +357,26 @@ export default function LeadDetailPage() {
                           />
                          </div>
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Owner</label>
+                          <Controller
+                            name="assignedTo"
+                            control={control}
+                            render={({ field }) => (
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger className="bg-white/5 border-white/10 h-11">
+                                  <SelectValue placeholder="Select an owner" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-popover/95 border-white/10">
+                                  <SelectItem value="Unassigned">Unassigned</SelectItem>
+                                  {adminName && <SelectItem value={adminName}>{adminName}</SelectItem>}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+                      </div>
                       <div className="flex justify-end gap-3 pt-6 border-t border-white/5">
                         <Button type="button" variant="ghost" className="h-11 px-8 rounded-xl" onClick={() => setIsEditing(false)}>Discard</Button>
                         <Button type="submit" className="bg-primary hover:bg-primary/90 font-bold px-10 h-11 shadow-lg shadow-primary/20 gap-2 rounded-xl" disabled={isSubmitting}>
