@@ -1,4 +1,3 @@
-
 import { NextRequest } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Lead from '@/models/Lead';
@@ -6,7 +5,7 @@ import { subMonths, subDays } from 'date-fns';
 import { successResponse, errorResponse } from '@/lib/api-helpers';
 import { withApiAuth } from '@/lib/auth-utils';
 
-async function postHandler(request: NextRequest, context: { params: any }) {
+async function postHandler(_request: NextRequest) {
   try {
     await dbConnect();
     await Lead.deleteMany({});

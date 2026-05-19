@@ -1,10 +1,2 @@
-export { default } from "next-auth/middleware";
-
-export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/leads/:path*",
-    "/reports/:path*",
-    "/settings/:path*",
-  ],
-};
+// Consolidated to src/middleware.ts
+export {};
