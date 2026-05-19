@@ -1,4 +1,4 @@
-'use client';
+'use server';
 
 export const ReportService = {
   getReports: async () => {
@@ -14,6 +14,14 @@ export const ReportService = {
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to save report');
+    return response.json();
+  },
+
+  deleteReport: async (id: string) => {
+    const response = await fetch(`/api/reports/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete report');
     return response.json();
   }
 };

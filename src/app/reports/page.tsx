@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Download, TrendingUp, Users, Target, FileText, Sparkles, ChevronRight, ArrowRight, Loader2 } from "lucide-react";
+import { Calendar, Download, TrendingUp, Users, Target, FileText, Sparkles, ChevronRight, ArrowRight, Loader2, Trash2 } from "lucide-react";
 import { useCRMStats, TimeRange } from "@/hooks/use-crm-stats";
 import { GlassCard } from "@/components/shared/glass-card";
 import { BackButton } from "@/components/shared/back-button";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 const COLORS = ["#7c3aed", "#d8b4fe", "#4f46e5", "#a78bfa", "#6366f1", "#8b5cf6"];
 
@@ -46,12 +47,13 @@ export default function ReportsPage() {
   const [reports, setReports] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const fetchReports = async () => {
     try {
       const data = await ReportService.getReports();
       setReports(data);
-      if (data.length > 0) setSelectedReport(data[0]);
+      if (data.length > 0 && !selectedReport) setSelectedReport(data[0]);
     } catch (error) {
       console.error("Failed to fetch reports", error);
     } finally {
@@ -62,6 +64,25 @@ export default function ReportsPage() {
   useEffect(() => {
     fetchReports();
   }, []);
+
+  const handleDeleteReport = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this report?")) return;
+    
+    setIsDeleting(id);
+    try {
+      await ReportService.deleteReport(id);
+      setReports(reports.filter(r => r._id !== id));
+      if (selectedReport?._id === id) {
+        setSelectedReport(null);
+      }
+      toast.success("Report deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete report");
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   if (statsLoading) {
     return (
@@ -182,7 +203,7 @@ export default function ReportsPage() {
                         </div>
                         <div className="text-center px-4">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Conv.</p>
-                          <p className="text-xl font-bold text-primary">{selectedReport.statsSnapshot?.conversionRate}%</p>
+                          <p className="text-xl font-bold text-primary">{selectedReport.statsSnapshot?.conversionRate?.toFixed(1)}%</p>
                         </div>
                       </div>
                     </div>
@@ -288,31 +309,41 @@ export default function ReportsPage() {
                     <div key={i} className="h-20 bg-white/5 rounded-xl animate-pulse" />
                   ))
                 ) : reports.map((report) => (
-                  <button
-                    key={report._id}
-                    onClick={() => setSelectedReport(report)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all group ${
-                      selectedReport?._id === report._id 
-                        ? 'bg-primary/10 border-primary/40' 
-                        : 'bg-white/[0.02] border-white/5 hover:border-white/10'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                        {new Date(report.createdAt).toLocaleDateString()}
-                      </span>
-                      {selectedReport?._id === report._id && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
-                    </div>
-                    <p className={`text-sm font-bold truncate transition-colors ${
-                      selectedReport?._id === report._id ? 'text-primary' : 'text-white'
-                    }`}>
-                      {report.title}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                       <span className="text-[10px] text-muted-foreground/60">{report.statsSnapshot?.totalLeads} Leads Analysed</span>
-                       <ChevronRight className={`w-3 h-3 transition-transform ${selectedReport?._id === report._id ? 'text-primary' : 'text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1'}`} />
-                    </div>
-                  </button>
+                  <div key={report._id} className="relative group">
+                    <button
+                      onClick={() => setSelectedReport(report)}
+                      className={`w-full text-left p-4 rounded-xl border transition-all ${
+                        selectedReport?._id === report._id 
+                          ? 'bg-primary/10 border-primary/40' 
+                          : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {new Date(report.createdAt).toLocaleDateString()}
+                        </span>
+                        {selectedReport?._id === report._id && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
+                      </div>
+                      <p className={`text-sm font-bold truncate transition-colors ${
+                        selectedReport?._id === report._id ? 'text-primary' : 'text-white'
+                      }`}>
+                        {report.title}
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                         <span className="text-[10px] text-muted-foreground/60">{report.statsSnapshot?.totalLeads} Leads Analysed</span>
+                         <ChevronRight className={`w-3 h-3 transition-transform ${selectedReport?._id === report._id ? 'text-primary' : 'text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1'}`} />
+                      </div>
+                    </button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-all rounded-lg"
+                      onClick={(e) => handleDeleteReport(e, report._id)}
+                      disabled={isDeleting === report._id}
+                    >
+                      {isDeleting === report._id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
                 ))}
 
                 {reports.length === 0 && !loadingReports && (
