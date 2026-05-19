@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion } from 'framer-motion';
 import { LeadService } from '@/services/lead-service';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, UserPlus, Loader2 } from 'lucide-react';
 import { GlassCard } from '@/components/shared/glass-card';
@@ -39,6 +39,7 @@ const leadFormSchema = z.object({
 
 export default function NewLeadPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [adminName, setAdminName] = useState<string | null>(null);
 
@@ -81,11 +82,14 @@ export default function NewLeadPage() {
         await LeadService.addNote(newLead._id, notes);
       }
       
-      toast.success('Lead created successfully!');
+      toast({ title: "Success", description: "Lead created successfully" });
       router.push(`/leads/${newLead._id}`);
     } catch (error: any) {
-      console.error('Failed to create lead:', error);
-      toast.error(error.message || 'Failed to create lead. Please try again.');
+      toast({ 
+        title: "Action Failed", 
+        description: error.message || "Failed to create lead", 
+        variant: "destructive" 
+      });
     } finally {
       setIsSubmitting(false);
     }

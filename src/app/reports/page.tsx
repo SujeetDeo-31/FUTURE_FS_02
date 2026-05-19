@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +52,7 @@ const RANGE_LABELS: Record<TimeRange, string> = {
 };
 
 export default function ReportsPage() {
+  const { toast } = useToast();
   const [range, setRange] = useState<TimeRange>('30d');
   const { stats, loading: statsLoading } = useCRMStats(range);
   const [reports, setReports] = useState<any[]>([]);
@@ -95,9 +96,9 @@ export default function ReportsPage() {
       if (selectedReport?._id === id) {
         setSelectedReport(null);
       }
-      toast.success("Report deleted successfully");
+      toast({ title: "Success", description: "Report deleted successfully" });
     } catch (error) {
-      toast.error("Failed to delete report");
+      toast({ title: "Error", description: "Failed to delete report", variant: "destructive" });
     } finally {
       setIsDeleting(null);
       setReportToDelete(null);

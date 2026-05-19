@@ -47,7 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { LeadStatus, LeadPriority, Lead } from "@/types/crm";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/shared/back-button";
@@ -70,6 +70,7 @@ const priorityColors: Record<LeadPriority, string> = {
 };
 
 export default function LeadsPage() {
+  const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminName, setAdminName] = useState<string | null>(null);
@@ -97,7 +98,7 @@ export default function LeadsPage() {
         setAdminName(admin.name);
       }
     } catch (err: any) {
-      toast.error(err.message || "Error fetching data");
+      toast({ title: "Error", description: err.message || "Error fetching pipeline data", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -152,12 +153,12 @@ export default function LeadsPage() {
   const handleBulkDelete = async () => {
     try {
       await Promise.all(selectedLeads.map(id => LeadService.deleteLead(id)));
-      toast.success(`Deleted ${selectedLeads.length} leads.`);
+      toast({ title: "Success", description: `Lead deleted successfully (${selectedLeads.length} items)` });
       fetchLeadsAndAdmin();
       setSelectedLeads([]);
       setIsDeleteDialogOpen(false);
     } catch (error) {
-      toast.error("Bulk delete failed.");
+      toast({ title: "Error", description: "Failed to delete lead", variant: "destructive" });
     }
   };
 
@@ -168,7 +169,7 @@ export default function LeadsPage() {
     setPriorityFilter("all");
     setOwnerFilter("all");
     setCurrentPage(1);
-    toast.info("Filters reset.");
+    toast({ title: "Filters reset", description: "Search filters have been cleared" });
   };
 
   const getInitials = (name: string | null | undefined): string => {

@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lead } from '@/types/crm';
 import { LeadService } from '@/services/lead-service';
@@ -77,6 +77,7 @@ export default function LeadDetailPage() {
   const router = useRouter();
   const params = useParams();
   const leadId = params.id as string;
+  const { toast } = useToast();
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [adminName, setAdminName] = useState<string | null>(null);
@@ -112,7 +113,7 @@ export default function LeadDetailPage() {
         setAdminName(admin.name);
       }
     } catch (error) {
-      toast.error('Failed to load lead details.');
+      toast({ title: "Error", description: "Failed to load lead details", variant: "destructive" });
       router.push('/leads');
     }
   };
@@ -126,11 +127,11 @@ export default function LeadDetailPage() {
   const handleUpdateLead = async (data: z.infer<typeof leadSchema>) => {
     try {
       await LeadService.updateLead(leadId, data);
-      toast.success('Lead updated successfully');
+      toast({ title: "Success", description: "Lead updated successfully" });
       setIsEditing(false);
       fetchLeadAndAdmin();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update lead');
+      toast({ title: "Error", description: error.message || "Failed to update lead", variant: "destructive" });
     }
   };
 
@@ -138,10 +139,10 @@ export default function LeadDetailPage() {
     setIsDeleting(true);
     try {
       await LeadService.deleteLead(leadId);
-      toast.success('Lead deleted successfully');
+      toast({ title: "Success", description: "Lead deleted successfully" });
       router.push('/leads');
     } catch (error) {
-      toast.error('Failed to delete lead');
+      toast({ title: "Error", description: "Failed to delete lead", variant: "destructive" });
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
     }
@@ -154,9 +155,9 @@ export default function LeadDetailPage() {
       const updatedLead = await LeadService.addNote(leadId, newNote, adminName || 'Admin');
       setLead(updatedLead);
       setNewNote('');
-      toast.success('Note added successfully');
+      toast({ title: "Success", description: "Note added successfully" });
     } catch (error) {
-      toast.error('Failed to add note');
+      toast({ title: "Error", description: "Failed to add note", variant: "destructive" });
     } finally {
       setIsSavingNote(false);
     }
@@ -167,9 +168,9 @@ export default function LeadDetailPage() {
       setDeletingNoteId(noteId);
       const updatedLead = await LeadService.deleteNote(leadId, noteId);
       setLead(updatedLead);
-      toast.success('Activity removed');
+      toast({ title: "Success", description: "Note deleted successfully" });
     } catch (error) {
-      toast.error('Failed to delete activity');
+      toast({ title: "Error", description: "Failed to delete note", variant: "destructive" });
     } finally {
       setDeletingNoteId(null);
     }
@@ -188,9 +189,9 @@ export default function LeadDetailPage() {
       });
       setAiSummary(result.summary);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Briefing generated');
+      toast({ title: "AI Briefing", description: "Contextual brief generated successfully" });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to generate summary');
+      toast({ title: "Error", description: error.message || "Failed to generate summary", variant: "destructive" });
     } finally {
       setIsSummarizing(false);
     }
@@ -213,9 +214,9 @@ export default function LeadDetailPage() {
       });
       setAiSuggestion(result);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Strategy updated');
+      toast({ title: "AI Recommendation", description: "Strategic recommendation updated successfully" });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to get suggestion');
+      toast({ title: "Error", description: error.message || "Failed to get suggestion", variant: "destructive" });
     } finally {
       setIsSuggesting(false);
     }
@@ -238,9 +239,9 @@ export default function LeadDetailPage() {
       });
       setAiDraft(result);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Draft prepared');
+      toast({ title: "AI Assistant", description: "Email outreach draft prepared successfully" });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to draft email');
+      toast({ title: "Error", description: error.message || "Failed to draft email", variant: "destructive" });
     } finally {
       setIsDrafting(false);
     }
@@ -248,7 +249,7 @@ export default function LeadDetailPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
+    toast({ title: "Success", description: "Copied to clipboard" });
   };
 
   if (!lead) {

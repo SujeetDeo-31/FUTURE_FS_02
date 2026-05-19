@@ -67,9 +67,9 @@ export default function DashboardPage() {
     try {
       await LeadService.seedSampleData();
       refresh();
-      toast({ title: "Success", description: "Sample leads generated." });
+      toast({ title: "Success", description: "Sample data seeded successfully" });
     } catch (error) {
-      console.error("Seeding failed", error);
+      toast({ title: "Action Failed", description: "Failed to seed sample data", variant: "destructive" });
     }
   };
 
@@ -77,10 +77,8 @@ export default function DashboardPage() {
     if (!stats) return;
     setIsGenerating(true);
     try {
-      // Deduct Credits
       await AccountService.deductCredits(25);
       
-      // Call AI to analyze stats
       const aiReport = await generateAiReport({
         totalLeads: stats.totalLeads,
         conversionRate: stats.conversionRate,
@@ -88,7 +86,6 @@ export default function DashboardPage() {
         sourceBreakdown: stats.sourceBreakdown,
       });
 
-      // Save to database
       await ReportService.saveReport({
         ...aiReport,
         statsSnapshot: {
@@ -100,14 +97,14 @@ export default function DashboardPage() {
 
       toast({ 
         title: "Report Generated", 
-        description: "Your intelligent pipeline analysis is ready. (25 AI Credits used)" 
+        description: "Report generated successfully" 
       });
       
       router.push('/reports');
     } catch (error: any) {
       toast({ 
         title: "Action Failed", 
-        description: error.message || "Failed to generate report.", 
+        description: error.message || "Failed to generate report", 
         variant: "destructive" 
       });
     } finally {

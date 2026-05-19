@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { AccountService } from '@/services/account-service';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { BackButton } from '@/components/shared/back-button';
 
 const TABS = [
@@ -22,6 +22,7 @@ const TABS = [
 ];
 
 function SettingsContent() {
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get('tab');
   
@@ -52,7 +53,6 @@ function SettingsContent() {
         }
       } catch (error) {
         console.error('Failed to fetch account', error);
-        toast.error('Failed to load account details.');
       } finally {
         setIsLoading(false);
       }
@@ -66,10 +66,9 @@ function SettingsContent() {
       setIsSaving(true);
       await AccountService.updateAccount({ name, bio });
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Profile updated successfully!');
+      toast({ title: "Success", description: "Profile updated successfully" });
     } catch (error) {
-      console.error('Failed to update account', error);
-      toast.error('Failed to save changes.');
+      toast({ title: "Error", description: "Failed to update profile", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
