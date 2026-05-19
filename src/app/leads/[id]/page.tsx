@@ -177,7 +177,7 @@ export default function LeadDetailPage() {
       });
       setAiSummary(result.summary);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Summary generated (10 credits)');
+      toast.success('Summary generated');
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate summary');
     } finally {
@@ -202,7 +202,7 @@ export default function LeadDetailPage() {
       });
       setAiSuggestion(result);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Analysis complete (15 credits)');
+      toast.success('Strategy analyzed');
     } catch (error: any) {
       toast.error(error.message || 'Failed to get suggestion');
     } finally {
@@ -227,7 +227,7 @@ export default function LeadDetailPage() {
       });
       setAiDraft(result);
       window.dispatchEvent(new Event('profileUpdated'));
-      toast.success('Email draft ready (10 credits)');
+      toast.success('Draft prepared');
     } catch (error: any) {
       toast.error(error.message || 'Failed to draft email');
     } finally {
@@ -466,7 +466,7 @@ export default function LeadDetailPage() {
 
             <TabsContent value="intelligence" className="mt-0 outline-none space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Strategic Recommendation */}
+                {/* Strategic Path */}
                 <GlassCard className="bg-primary/[0.02] border-primary/10">
                   <div className="p-8 h-full flex flex-col">
                     <div className="flex items-start justify-between mb-8">
@@ -477,7 +477,7 @@ export default function LeadDetailPage() {
                           </div>
                           <h3 className="text-sm font-bold text-white uppercase tracking-widest">Strategic Path</h3>
                         </div>
-                        <p className="text-xs text-muted-foreground">AI analysis of the best next move</p>
+                        <p className="text-xs text-muted-foreground">Predictive next move</p>
                       </div>
                       <Button size="sm" variant="ghost" className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary/20 text-primary border border-primary/10 rounded-lg" onClick={handleGetSuggestion} disabled={isSuggesting}>
                         {isSuggesting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
@@ -496,7 +496,7 @@ export default function LeadDetailPage() {
                               <p className="text-base font-bold text-white leading-tight">{aiSuggestion.suggestedAction}</p>
                             </div>
                             <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-                              <p className="text-sm text-muted-foreground italic leading-relaxed font-medium">"{aiSuggestion.reasoning}"</p>
+                              <p className="text-sm text-muted-foreground italic leading-relaxed font-medium">{aiSuggestion.reasoning}</p>
                             </div>
                             <div className="space-y-2.5">
                               <div className="flex justify-between items-center">
@@ -511,7 +511,7 @@ export default function LeadDetailPage() {
                         ) : (
                           <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center space-y-4 border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
                             <Zap className="w-8 h-8 text-muted-foreground/20" />
-                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Launch analysis to determine predictive sales strategies.</p>
+                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Predictive analytics for optimal pipeline conversion.</p>
                           </div>
                         )}
                       </AnimatePresence>
@@ -519,20 +519,20 @@ export default function LeadDetailPage() {
                   </div>
                 </GlassCard>
 
-                {/* Contextual Brief */}
-                <GlassCard className="bg-indigo-500/[0.02] border-indigo-500/10">
+                {/* Executive Brief */}
+                <GlassCard className="bg-primary/[0.02] border-primary/10">
                   <div className="p-8 h-full flex flex-col">
                     <div className="flex items-start justify-between mb-8">
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/20">
+                          <div className="p-2 rounded-xl bg-primary/20 text-primary border border-primary/20">
                             <MessageSquare className="w-5 h-5" />
                           </div>
                           <h3 className="text-sm font-bold text-white uppercase tracking-widest">Executive Brief</h3>
                         </div>
-                        <p className="text-xs text-muted-foreground">Interaction history condensed</p>
+                        <p className="text-xs text-muted-foreground">Concise context</p>
                       </div>
-                      <Button size="sm" variant="ghost" className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/10 rounded-lg" onClick={handleGenerateSummary} disabled={isSummarizing}>
+                      <Button size="sm" variant="ghost" className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary/20 text-primary border border-primary/10 rounded-lg" onClick={handleGenerateSummary} disabled={isSummarizing}>
                         {isSummarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
                         Briefing
                       </Button>
@@ -541,14 +541,14 @@ export default function LeadDetailPage() {
                     <div className="flex-1">
                       <AnimatePresence mode="wait">
                         {aiSummary ? (
-                          <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="p-6 rounded-xl bg-indigo-500/5 border border-indigo-500/10 relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/40" />
+                          <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="p-6 rounded-xl bg-primary/5 border border-primary/10 relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
                             <p className="text-sm text-white/90 leading-relaxed font-medium">{aiSummary}</p>
                           </motion.div>
                         ) : (
                           <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center space-y-4 border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
                             <MessageSquare className="w-8 h-8 text-muted-foreground/20" />
-                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Condense months of notes into a quick 30-second briefing.</p>
+                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Condense activity history into an executive summary.</p>
                           </div>
                         )}
                       </AnimatePresence>
@@ -557,23 +557,23 @@ export default function LeadDetailPage() {
                 </GlassCard>
               </div>
 
-              {/* Email Outreach Draft */}
-              <GlassCard className="bg-emerald-500/[0.02] border-emerald-500/10">
+              {/* Outreach Assistant */}
+              <GlassCard className="bg-primary/[0.02] border-primary/10">
                 <div className="p-8">
                   <div className="flex items-start justify-between mb-8">
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">
+                        <div className="p-2 rounded-xl bg-primary/20 text-primary border border-primary/20">
                           <PenTool className="w-5 h-5" />
                         </div>
                         <h3 className="text-sm font-bold text-white uppercase tracking-widest">Outreach Assistant</h3>
                       </div>
-                      <p className="text-xs text-muted-foreground">Draft contextually personalized engagement</p>
+                      <p className="text-xs text-muted-foreground">Personalized engagement</p>
                     </div>
                     <Button 
                       size="sm" 
                       variant="ghost" 
-                      className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/10 rounded-lg" 
+                      className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary/20 text-primary border border-primary/10 rounded-lg" 
                       onClick={handleGenerateDraft} 
                       disabled={isDrafting}
                     >
@@ -590,20 +590,20 @@ export default function LeadDetailPage() {
                             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Subject</p>
                             <p className="text-sm text-white font-bold">{aiDraft.subject}</p>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-all" onClick={() => copyToClipboard(aiDraft.subject)}>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all" onClick={() => copyToClipboard(aiDraft.subject)}>
                             <Copy className="w-4 h-4" />
                           </Button>
                         </div>
                         <div className="relative group">
                           <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-emerald-400 bg-black/60 rounded-lg" onClick={() => copyToClipboard(aiDraft.body)}>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary bg-black/60 rounded-lg" onClick={() => copyToClipboard(aiDraft.body)}>
                               <Copy className="w-4 h-4" />
                             </Button>
                           </div>
                           <Textarea 
                             readOnly 
                             value={aiDraft.body} 
-                            className="bg-black/40 border-white/5 min-h-[300px] resize-none text-sm text-white/90 leading-relaxed font-medium p-8 rounded-xl ring-0 focus-visible:ring-0"
+                            className="bg-black/40 border-white/5 min-h-[250px] resize-none text-sm text-white/90 leading-relaxed font-medium p-8 rounded-xl ring-0 focus-visible:ring-0"
                           />
                         </div>
                       </motion.div>
@@ -612,7 +612,7 @@ export default function LeadDetailPage() {
                         <Mail className="w-10 h-10 text-muted-foreground/15 mx-auto" />
                         <div className="space-y-1">
                           <p className="text-sm text-white/40 font-bold">No draft generated</p>
-                          <p className="text-xs text-muted-foreground/50 max-w-[300px] mx-auto leading-relaxed">Personalize your outreach using the lead's unique journey and current stage.</p>
+                          <p className="text-xs text-muted-foreground/50 max-w-[300px] mx-auto leading-relaxed">Create a tailored follow-up based on the lead's unique journey.</p>
                         </div>
                       </div>
                     )}
@@ -681,19 +681,19 @@ export default function LeadDetailPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="space-y-6"
               >
-                <GlassCard className="bg-gradient-to-br from-indigo-500/10 to-transparent border-indigo-500/20 shadow-indigo-500/5">
+                <GlassCard className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20 shadow-primary/5">
                   <div className="p-8 space-y-4">
                     <h3 className="font-bold text-white flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-indigo-400" />
+                      <Sparkles className="w-5 h-5 text-primary" />
                       Nurture Assistant
                     </h3>
                     <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-                      The AI Insight suite uses this lead's interaction history and metadata to generate winning strategies. Every analysis helps refine the next suggested step.
+                      The AI Insight suite uses this lead's interaction history to generate high-conversion strategies and personalized outreach.
                     </p>
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/10">
-                      <Info className="w-4 h-4 text-indigo-400 shrink-0" />
-                      <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-normal">
-                        Powered by Gemini 2.5 Flash
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border border-primary/10">
+                      <Info className="w-4 h-4 text-primary shrink-0" />
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest leading-normal">
+                        Gemini 2.5 Flash Insight
                       </p>
                     </div>
                   </div>

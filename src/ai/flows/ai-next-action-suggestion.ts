@@ -66,7 +66,7 @@ const AiNextActionSuggestionOutputSchema = z.object({
     .describe('A concise suggestion for the next best action to take.'),
   reasoning: z
     .string()
-    .describe('The explanation behind the suggested action, referencing lead details.'),
+    .describe('A brief explanation (max 2 sentences) behind the suggested action.'),
   confidenceScore: z
     .number()
     .min(0)
@@ -98,31 +98,19 @@ const nextActionSuggestionPrompt = ai.definePrompt({
   name: 'nextActionSuggestionPrompt',
   input: {schema: AiNextActionSuggestionInputSchema},
   output: {schema: AiNextActionSuggestionOutputSchema},
-  prompt: `You are an expert CRM assistant specializing in sales and lead management. Your task is to analyze the provided lead's information and suggest the most effective next action or communication strategy to improve the chances of conversion.
-
-Consider the lead's current status, priority, interaction history, and any scheduled follow-ups or contact dates.
+  prompt: `You are an expert CRM assistant. Analyze the lead's information and suggest a highly actionable next move.
 
 Lead Details:
 Name: {{{name}}}
 Company: {{{company}}}
-Email: {{{email}}}
-Phone: {{{phone}}}
-Source: {{{source}}}
 Status: {{{status}}}
 Priority: {{{priority}}}
-Assigned To: {{{assignedTo}}}
-Created At: {{{createdAt}}}
-Last Contacted: {{{lastContactedDate}}}
-Next Follow-up Due: {{{followUpDate}}}
-
-Interaction History (Most Recent First):
+Interaction History:
 {{#each notesHistory}}
 - {{{timestamp}}}: {{{note}}}
 {{/each}}
 
-Based on this information, provide a concise suggested action, a brief reasoning, a confidence score (0-100), and optionally, a communication strategy and a suggested follow-up date (YYYY-MM-DD).
-
-If the lead is already 'Converted' or 'Lost', suggest no further action and provide a high confidence score.`,
+Based on this, provide a concise suggested action and a brief reasoning (max 2 sentences). Keep the tone professional and focused on conversion.`,
 });
 
 const aiNextActionSuggestionFlow = ai.defineFlow(
