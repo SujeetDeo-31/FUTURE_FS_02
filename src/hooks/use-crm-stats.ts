@@ -59,6 +59,7 @@ export function useCRMStats(timeRange: TimeRange = '30d') {
 
     const sourceBreakdown: Record<string, number> = {};
     let convertedCount = 0;
+    let highPriorityCount = 0;
     let followUpsDueCount = 0;
 
     const monthlyGrowth: Record<string, { month: string; leads: number; active: number }> = {};
@@ -73,6 +74,7 @@ export function useCRMStats(timeRange: TimeRange = '30d') {
         statusBreakdown[lead.status]++;
       }
       if (lead.status === 'Converted') convertedCount++;
+      if (lead.priority === 'High') highPriorityCount++;
       
       sourceBreakdown[lead.source] = (sourceBreakdown[lead.source] || 0) + 1;
 
@@ -94,6 +96,7 @@ export function useCRMStats(timeRange: TimeRange = '30d') {
       totalLeads: filteredLeads.length,
       convertedCount,
       newLeadsCount: statusBreakdown['New'],
+      highPriorityCount,
       followUpsDueCount,
       statusBreakdown,
       sourceBreakdown,

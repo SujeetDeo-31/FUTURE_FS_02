@@ -1,11 +1,13 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
-if (!process.env.GOOGLE_GENAI_API_KEY) {
-  throw new Error('GOOGLE_GENAI_API_KEY must be set');
-}
+const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY;
 
 export const ai = genkit({
-  plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY })],
-  model: 'googleai/gemini-2.5-flash',
+  plugins: [
+    googleAI({ 
+      apiKey: apiKey || 'missing-api-key' 
+    })
+  ],
+  model: 'googleai/gemini-1.5-flash',
 });
