@@ -445,9 +445,9 @@ export default function LeadsPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent className="bg-popover/95 backdrop-blur-2xl border-white/10 rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold font-headline">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold font-headline text-white">Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
-              This will permanently delete <span className="text-white font-bold">{selectedLeads.length}</span> selected leads.
+              This action cannot be undone. This will permanently delete <span className="text-white font-bold">{selectedLeads.length}</span> selected leads.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3 mt-6">

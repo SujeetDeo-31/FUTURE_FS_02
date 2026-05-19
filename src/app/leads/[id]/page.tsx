@@ -44,6 +44,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const phoneRegex = /^[0-9+\-() ]*$/;
 
@@ -72,6 +82,7 @@ export default function LeadDetailPage() {
   const [adminName, setAdminName] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
@@ -124,7 +135,6 @@ export default function LeadDetailPage() {
   };
 
   const handleDeleteLead = async () => {
-    if(!confirm('Are you sure you want to delete this lead?')) return;
     setIsDeleting(true);
     try {
       await LeadService.deleteLead(leadId);
@@ -133,6 +143,7 @@ export default function LeadDetailPage() {
     } catch (error) {
       toast.error('Failed to delete lead');
       setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -281,7 +292,7 @@ export default function LeadDetailPage() {
             <Edit className="w-4 h-4"/>
             {isEditing ? 'Cancel' : 'Edit Profile'}
           </Button>
-          <Button variant="destructive" className="h-11 font-bold gap-2 rounded-xl shadow-lg shadow-red-500/10 px-6" onClick={handleDeleteLead} disabled={isDeleting}>
+          <Button variant="destructive" className="h-11 font-bold gap-2 rounded-xl shadow-lg shadow-red-500/10 px-6" onClick={() => setIsDeleteDialogOpen(true)} disabled={isDeleting}>
             {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
             {isDeleting ? 'Removing...' : 'Remove Lead'}
           </Button>
@@ -723,6 +734,27 @@ export default function LeadDetailPage() {
           </AnimatePresence>
         </aside>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-popover/95 backdrop-blur-2xl border-white/10 rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold font-headline text-white">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              This action cannot be undone. This will permanently delete this lead and all associated activity records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3 mt-6">
+            <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10 h-11 rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteLead}
+              className="bg-red-500 hover:bg-red-600 text-white font-bold h-11 rounded-xl border-none shadow-lg shadow-red-500/20"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Confirm Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

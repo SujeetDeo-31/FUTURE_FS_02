@@ -30,6 +30,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const COLORS = ["#7c3aed", "#d8b4fe", "#4f46e5", "#a78bfa", "#6366f1", "#8b5cf6"];
 
@@ -48,6 +58,8 @@ export default function ReportsPage() {
   const [loadingReports, setLoadingReports] = useState(true);
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const fetchReports = async () => {
     try {
@@ -66,10 +78,16 @@ export default function ReportsPage() {
     fetchReports();
   }, []);
 
-  const handleDeleteReport = async (e: React.MouseEvent, id: string) => {
+  const openDeleteDialog = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this report?")) return;
+    setReportToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!reportToDelete) return;
     
+    const id = reportToDelete;
     setIsDeleting(id);
     try {
       await ReportService.deleteReport(id);
@@ -82,6 +100,8 @@ export default function ReportsPage() {
       toast.error("Failed to delete report");
     } finally {
       setIsDeleting(null);
+      setReportToDelete(null);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -339,7 +359,7 @@ export default function ReportsPage() {
                       variant="ghost" 
                       size="icon" 
                       className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-all rounded-lg"
-                      onClick={(e) => handleDeleteReport(e, report._id)}
+                      onClick={(e) => openDeleteDialog(e, report._id)}
                       disabled={isDeleting === report._id}
                     >
                       {isDeleting === report._id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -366,6 +386,26 @@ export default function ReportsPage() {
           </GlassCard>
         </div>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-popover/95 backdrop-blur-2xl border-white/10 rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold font-headline text-white">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
+              This action cannot be undone. This will permanently delete this report from your analysis history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3 mt-6">
+            <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10 h-11 rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-red-500 hover:bg-red-600 text-white font-bold h-11 rounded-xl border-none shadow-lg shadow-red-500/20"
+            >
+              Confirm Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
