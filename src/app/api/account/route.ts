@@ -78,11 +78,18 @@ async function patchHandler(request: NextRequest) {
     const user = await User.findOne({ email });
     if (!user) return errorResponse('User not found', 404);
 
-    if (user.aiCredits < amount) {
-      return errorResponse('Insufficient AI credits', 400);
+    // Ensure credits exist
+    if (user.aiCredits === undefined || user.aiCredits === null) {
+      user.aiCredits = 500;
     }
 
-    user.aiCredits -= amount;
+    // Auto-refill logic for demo/dev experience
+    if (user.aiCredits < amount) {
+      user.aiCredits = 500;
+    }
+
+    // Deduct and prevent negative
+    user.aiCredits = Math.max(0, user.aiCredits - amount);
     await user.save();
 
     return successResponse({ credits: user.aiCredits });

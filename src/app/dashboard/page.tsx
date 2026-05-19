@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -78,6 +79,9 @@ export default function DashboardPage() {
     setIsGenerating(true);
     try {
       await AccountService.deductCredits(25);
+      
+      // Update UI credits display
+      window.dispatchEvent(new Event('profileUpdated'));
       
       const aiReport = await generateAiReport({
         totalLeads: stats.totalLeads,
