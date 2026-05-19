@@ -241,7 +241,7 @@ function SettingsContent() {
 
           <GlassCard className='bg-destructive/5 border-destructive/10'>
             <div className='p-6 space-y-4'>
-              <h3 className='text-sm font-bold text-destructive uppercase tracking-widest'>Danger Zone</h3>
+              <h3 className='text-sm font-bold text-destructive uppercase tracking-widest'>Account Action</h3>
               <p className='text-xs text-muted-foreground'>Permanently delete your account and all associated lead data. This action is irreversible.</p>
               <Button variant='destructive' className='w-full text-xs font-bold uppercase tracking-widest h-10'>
                 Delete Account

@@ -89,3 +89,7 @@ LeadFlow CRM is a professional, AI-powered CRM dashboard designed for modern sal
 ## 🚀 Deployment
 
 The project is designed for seamless deployment on **Vercel**. Ensure all environment variables are configured in your Vercel project settings before deploying.
+
+## 🌐 Live Demo
+
+[View Live Application](https://leadflow-crm-five-mu.vercel.app/login?callbackUrl=%2Fdashboard)
