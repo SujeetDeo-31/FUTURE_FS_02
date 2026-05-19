@@ -51,6 +51,24 @@ const RANGE_LABELS: Record<TimeRange, string> = {
   'all': 'All Time'
 };
 
+/**
+ * Simple component to render text with bold markdown tags (**text**) as <strong> elements.
+ */
+function FormattedText({ text }: { text: string }) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i} className="text-white font-bold">{part.slice(2, -2)}</strong>;
+        }
+        return part;
+      })}
+    </>
+  );
+}
+
 export default function ReportsPage() {
   const { toast } = useToast();
   const [range, setRange] = useState<TimeRange>('30d');
@@ -231,32 +249,32 @@ export default function ReportsPage() {
                     </div>
 
                     <div className="p-6 rounded-2xl bg-white/[0.01] border border-white/5 leading-relaxed text-white/90 font-medium italic">
-                      "{selectedReport.summary}"
+                      "<FormattedText text={selectedReport.summary} />"
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-4">
+                      <div className="space-y-5">
                         <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
                           <Sparkles className="w-3.5 h-3.5 text-primary" /> Key Insights
                         </h3>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           {selectedReport.insights.map((insight: string, i: number) => (
-                            <div key={i} className="flex gap-3 text-sm text-muted-foreground">
+                            <div key={i} className="flex gap-3 text-sm text-muted-foreground leading-snug">
                               <span className="text-primary font-bold">0{i+1}.</span>
-                              <p>{insight}</p>
+                              <p><FormattedText text={insight} /></p>
                             </div>
                           ))}
                         </div>
                       </div>
-                      <div className="space-y-4">
+                      <div className="space-y-5">
                         <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
                           <ArrowRight className="w-3.5 h-3.5 text-primary" /> Strategic Actions
                         </h3>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           {selectedReport.recommendations.map((rec: string, i: number) => (
-                            <div key={i} className="flex gap-3 text-sm text-white font-medium p-3 rounded-xl bg-primary/5 border border-primary/10">
+                            <div key={i} className="flex gap-3 text-sm text-white font-medium p-3.5 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors">
                               <Target className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                              <p>{rec}</p>
+                              <p><FormattedText text={rec} /></p>
                             </div>
                           ))}
                         </div>

@@ -39,11 +39,13 @@ Data Snapshot:
 - Lead Sources: {{#each sourceBreakdown}}{{@key}}: {{this}}, {{/each}}
 
 Requirements:
-- The summary should be objective and professional.
-- Insights should highlight patterns or bottlenecks.
-- Recommendations should be highly actionable (e.g., "Increase follow-up frequency on Referral leads").
+- TONE: Executive, data-driven, and punchy. Avoid corporate fluff.
+- SUMMARY: Exactly 2 sentences. Focus on the most significant trend.
+- INSIGHTS: High-impact observations. Use **bold markdown** for key numbers. Keep each insight under 15 words.
+- RECOMMENDATIONS: Extremely actionable steps. No generic advice.
 
-Tone: Executive, data-driven, and authoritative.`,
+Example Insight Style: "Referral conversion is at **14%**, significantly outperforming website leads."
+Example Recommendation: "Shift 20% of ad spend from LinkedIn to Referrals immediately."`,
 });
 
 const aiGenerateReportFlow = ai.defineFlow(
