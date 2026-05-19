@@ -153,7 +153,6 @@ export default function ReportsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Report Content */}
         <div className="lg:col-span-8 space-y-8">
           <AnimatePresence mode="wait">
             {selectedReport ? (
@@ -223,7 +222,6 @@ export default function ReportsPage() {
                   </div>
                 </GlassCard>
 
-                {/* Visual Data for Selected Range */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <GlassCard className="h-[350px]">
                     <CardHeader>
@@ -277,7 +275,6 @@ export default function ReportsPage() {
           </AnimatePresence>
         </div>
 
-        {/* Report History Sidebar */}
         <div className="lg:col-span-4 space-y-6">
           <GlassCard className="h-full">
             <div className="p-6 space-y-6">
