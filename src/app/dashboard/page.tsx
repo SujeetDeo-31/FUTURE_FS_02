@@ -252,7 +252,7 @@ export default function DashboardPage() {
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
-          </AreaChart>
+          </GlassCard>
         </div>
 
         <div>
