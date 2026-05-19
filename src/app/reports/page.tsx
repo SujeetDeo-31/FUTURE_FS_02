@@ -51,6 +51,7 @@ export default function ReportsPage() {
 
   const fetchReports = async () => {
     try {
+      setLoadingReports(true);
       const data = await ReportService.getReports();
       setReports(data);
       if (data.length > 0 && !selectedReport) setSelectedReport(data[0]);
@@ -72,7 +73,7 @@ export default function ReportsPage() {
     setIsDeleting(id);
     try {
       await ReportService.deleteReport(id);
-      setReports(reports.filter(r => r._id !== id));
+      setReports(prev => prev.filter(r => r._id !== id));
       if (selectedReport?._id === id) {
         setSelectedReport(null);
       }
