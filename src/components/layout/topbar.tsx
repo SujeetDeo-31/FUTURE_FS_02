@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, User, Shield, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { AccountService } from "@/services/account-service";
+import Link from "next/link";
 
 export function Topbar() {
   const [userName, setUserName] = useState<string | null>(null);
@@ -88,9 +89,24 @@ export function Topbar() {
             <DropdownMenuContent align="end" className="w-56 mt-2 bg-popover/90 backdrop-blur-xl border-white/10">
               <DropdownMenuLabel className="font-headline">My Account</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-white/5" />
-              <DropdownMenuItem className="focus:bg-primary/10 focus:text-primary cursor-pointer">Profile</DropdownMenuItem>
-              <DropdownMenuItem className="focus:bg-primary/10 focus:text-primary cursor-pointer">Security</DropdownMenuItem>
-              <DropdownMenuItem className="focus:bg-primary/10 focus:text-primary cursor-pointer">Billing</DropdownMenuItem>
+              <DropdownMenuItem asChild className="focus:bg-primary/10 focus:text-primary cursor-pointer">
+                <Link href="/settings?tab=Account" className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="focus:bg-primary/10 focus:text-primary cursor-pointer">
+                <Link href="/settings?tab=Security" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Security
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="focus:bg-primary/10 focus:text-primary cursor-pointer">
+                <Link href="/settings?tab=Billing" className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Billing
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-white/5" />
               <DropdownMenuItem
                 onClick={() => signOut({ callbackUrl: '/login' })}

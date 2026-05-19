@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Settings, User, Bell, Shield, CreditCard, Save, Lock, Banknote, Sparkles } from 'lucide-react';
+import { User, Bell, Shield, CreditCard, Save, Lock, Banknote, Sparkles } from 'lucide-react';
 import { GlassCard } from '@/components/shared/glass-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +21,10 @@ const TABS = [
   { icon: CreditCard, label: 'Billing' },
 ];
 
-export default function SettingsPage() {
+function SettingsContent() {
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  
   const [activeTab, setActiveTab] = useState('Account');
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
@@ -28,6 +32,12 @@ export default function SettingsPage() {
   const [credits, setCredits] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (requestedTab && TABS.some(t => t.label === requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+  }, [requestedTab]);
 
   useEffect(() => {
     const fetchAccount = async () => {
@@ -246,5 +256,17 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin' />
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   );
 }
