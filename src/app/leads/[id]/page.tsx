@@ -30,7 +30,9 @@ import {
   Send,
   Trash,
   Copy,
-  PenTool
+  PenTool,
+  ArrowRight,
+  Info
 } from 'lucide-react';
 
 import { GlassCard } from '@/components/shared/glass-card';
@@ -73,6 +75,7 @@ export default function LeadDetailPage() {
   const [newNote, setNewNote] = useState('');
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   // AI State
   const [isSummarizing, setIsSummarizing] = useState(false);
@@ -247,7 +250,7 @@ export default function LeadDetailPage() {
 
   const DetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string | undefined }) => (
     <div className="flex items-start gap-3">
-      <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+      <div className="p-2 rounded-lg bg-white/5 border border-white/10 shrink-0">
         <Icon className="w-4 h-4 text-muted-foreground" />
       </div>
       <div>
@@ -258,11 +261,11 @@ export default function LeadDetailPage() {
   );
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-8 pb-20">
       <BackButton />
 
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
+        <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="text-4xl font-bold font-headline text-white tracking-tight">{lead.name}</h1>
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-bold px-3 py-1">
@@ -285,10 +288,10 @@ export default function LeadDetailPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-8 space-y-8">
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="bg-white/5 border border-white/10 p-1 mb-6 rounded-xl h-12 inline-flex">
+          <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
+            <TabsList className="bg-white/5 border border-white/10 p-1 mb-8 rounded-xl h-12 inline-flex">
               <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-primary px-8 font-bold">Overview</TabsTrigger>
               <TabsTrigger value="activity" className="rounded-lg data-[state=active]:bg-primary px-8 font-bold">Activity Feed</TabsTrigger>
               <TabsTrigger value="intelligence" className="rounded-lg data-[state=active]:bg-primary px-8 font-bold flex gap-2">
@@ -300,31 +303,31 @@ export default function LeadDetailPage() {
               <GlassCard>
                 <div className="p-8">
                   {isEditing ? (
-                    <form onSubmit={handleSubmit(handleUpdateLead)} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Name</label>
+                    <form onSubmit={handleSubmit(handleUpdateLead)} className="space-y-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Full Name</label>
                           <Input placeholder="Name" {...register('name')} className="bg-white/5 border-white/10 h-11" />
                           {errors.name && <p className="text-[10px] text-destructive font-bold">{errors.name.message}</p>}
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email</label>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email Address</label>
                           <Input placeholder="Email" {...register('email')} className="bg-white/5 border-white/10 h-11" />
                           {errors.email && <p className="text-[10px] text-destructive font-bold">{errors.email.message}</p>}
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone</label>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Contact Phone</label>
                           <Input placeholder="Phone (numbers only)" {...register('phone')} className="bg-white/5 border-white/10 h-11" />
                           {errors.phone && <p className="text-[10px] text-destructive font-bold">{errors.phone.message}</p>}
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Company</label>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company</label>
                           <Input placeholder="Company" {...register('company')} className="bg-white/5 border-white/10 h-11" />
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Status</label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline Status</label>
                           <Controller
                               name="status"
                               control={control}
@@ -338,8 +341,8 @@ export default function LeadDetailPage() {
                               )}
                           />
                          </div>
-                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Priority</label>
+                         <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Urgency Priority</label>
                           <Controller
                               name="priority"
                               control={control}
@@ -354,8 +357,8 @@ export default function LeadDetailPage() {
                           />
                          </div>
                       </div>
-                      <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
-                        <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>Discard</Button>
+                      <div className="flex justify-end gap-3 pt-6 border-t border-white/5">
+                        <Button type="button" variant="ghost" className="h-11 px-8 rounded-xl" onClick={() => setIsEditing(false)}>Discard</Button>
                         <Button type="submit" className="bg-primary hover:bg-primary/90 font-bold px-10 h-11 shadow-lg shadow-primary/20 gap-2 rounded-xl" disabled={isSubmitting}>
                           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                           {isSubmitting ? 'Saving...' : 'Save Changes'}
@@ -363,7 +366,7 @@ export default function LeadDetailPage() {
                       </div>
                     </form>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-10 gap-x-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-12 gap-x-8">
                       <DetailItem icon={User} label="Full Name" value={lead.name} />
                       <DetailItem icon={Mail} label="Email Address" value={lead.email} />
                       <DetailItem icon={Phone} label="Contact Phone" value={lead.phone} />
@@ -377,25 +380,23 @@ export default function LeadDetailPage() {
             </TabsContent>
 
             <TabsContent value="activity" className="mt-0 outline-none">
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <GlassCard className="border-primary/20 bg-primary/[0.02]">
-                  <div className="p-6">
-                    <div className="flex gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0 border border-primary/20 shadow-inner">
-                        <MessageSquare className="w-5 h-5" />
+                  <div className="p-8">
+                    <div className="flex gap-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0 border border-primary/20 shadow-inner">
+                        <MessageSquare className="w-6 h-6" />
                       </div>
                       <div className="flex-1 space-y-4">
-                        <div className="relative group">
-                          <Textarea 
-                            placeholder="Add an internal note or log a recent activity..." 
-                            value={newNote}
-                            onChange={(e) => setNewNote(e.target.value)}
-                            className="bg-white/5 border-white/10 focus-visible:ring-1 focus-visible:ring-primary/40 min-h-[100px] resize-none text-sm rounded-xl p-4 transition-all"
-                          />
-                        </div>
+                        <Textarea 
+                          placeholder="Log a call, email, or internal update for this lead..." 
+                          value={newNote}
+                          onChange={(e) => setNewNote(e.target.value)}
+                          className="bg-white/5 border-white/10 focus-visible:ring-1 focus-visible:ring-primary/40 min-h-[120px] resize-none text-sm rounded-xl p-4 transition-all"
+                        />
                         <div className="flex justify-end">
                           <Button 
-                            className="bg-primary hover:bg-primary/90 font-bold px-8 h-10 rounded-xl shadow-lg shadow-primary/10 gap-2" 
+                            className="bg-primary hover:bg-primary/90 font-bold px-8 h-11 rounded-xl shadow-lg shadow-primary/10 gap-2" 
                             onClick={handleAddNote}
                             disabled={isSavingNote || !newNote.trim()}
                           >
@@ -408,51 +409,51 @@ export default function LeadDetailPage() {
                   </div>
                 </GlassCard>
 
-                <div className="space-y-4 px-2">
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
+                <div className="space-y-6 px-2">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-4">
                     <Calendar className="w-3.5 h-3.5" />
-                    Interaction Timeline
+                    Activity History
                   </h3>
-                  <div className="space-y-4 relative">
-                    <div className="absolute left-4 top-0 bottom-0 w-[1px] bg-white/5 z-0" />
+                  <div className="space-y-6 relative">
+                    <div className="absolute left-[22px] top-0 bottom-0 w-[1px] bg-white/5 z-0" />
                     
                     {lead.notes.length === 0 && (
-                      <div className="text-center py-12 text-muted-foreground/30 italic text-sm">
-                        No activity records found for this lead.
+                      <div className="text-center py-20 bg-white/[0.01] rounded-2xl border border-dashed border-white/5">
+                        <p className="text-sm text-muted-foreground/30 italic">No activity records found for this lead.</p>
                       </div>
                     )}
                     
                     {lead.notes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((note, idx) => (
                       <motion.div 
                         key={note._id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         className="relative z-10 flex gap-6 group"
                       >
                         <div className="shrink-0 pt-1">
-                          <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/40 group-hover:bg-primary/5 transition-all shadow-sm">
-                            <FileText className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary" />
+                          <div className="w-[45px] h-[45px] rounded-xl bg-sidebar flex items-center justify-center border border-white/10 group-hover:border-primary/40 group-hover:bg-primary/5 transition-all shadow-sm">
+                            <FileText className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                           </div>
                         </div>
                         <GlassCard className="flex-1 border-white/5 group-hover:border-white/10 transition-all">
-                          <div className="p-5 flex justify-between items-start">
-                            <div className="space-y-2">
+                          <div className="p-6 flex justify-between items-start">
+                            <div className="space-y-3">
                               <div className="flex items-center gap-3">
                                 <span className="text-xs font-bold text-white/90">{note.author}</span>
                                 <span className="w-1 h-1 rounded-full bg-white/10" />
-                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{new Date(note.createdAt).toLocaleString()}</span>
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{new Date(note.createdAt).toLocaleString()}</span>
                               </div>
                               <p className="text-sm text-muted-foreground leading-relaxed transition-colors group-hover:text-white/80">{note.content}</p>
                             </div>
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                              className="h-9 w-9 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                               onClick={() => handleDeleteNote(note._id)}
                               disabled={deletingNoteId === note._id}
                             >
-                              {deletingNoteId === note._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash className="w-3.5 h-3.5" />}
+                              {deletingNoteId === note._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash className="w-4 h-4" />}
                             </Button>
                           </div>
                         </GlassCard>
@@ -463,52 +464,54 @@ export default function LeadDetailPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="intelligence" className="mt-0 outline-none space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <GlassCard className="bg-primary/[0.03] border-primary/20">
+            <TabsContent value="intelligence" className="mt-0 outline-none space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Strategic Recommendation */}
+                <GlassCard className="bg-primary/[0.02] border-primary/10">
                   <div className="p-8 h-full flex flex-col">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-primary/20 text-primary border border-primary/20">
-                          <Zap className="w-5 h-5" />
+                    <div className="flex items-start justify-between mb-8">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-primary/20 text-primary border border-primary/20">
+                            <Zap className="w-5 h-5" />
+                          </div>
+                          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Strategic Path</h3>
                         </div>
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Strategic Recommendation</h3>
+                        <p className="text-xs text-muted-foreground">AI analysis of the best next move</p>
                       </div>
-                      <Button size="sm" variant="ghost" className="h-9 px-4 text-xs font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary/20 text-primary border border-primary/10 rounded-lg" onClick={handleGetSuggestion} disabled={isSuggesting}>
-                        {isSuggesting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : null}
-                        Launch Analysis
+                      <Button size="sm" variant="ghost" className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary/20 text-primary border border-primary/10 rounded-lg" onClick={handleGetSuggestion} disabled={isSuggesting}>
+                        {isSuggesting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
+                        Analyze
                       </Button>
                     </div>
                     
                     <div className="flex-1">
                       <AnimatePresence mode="wait">
                         {aiSuggestion ? (
-                          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
-                            <div className="space-y-2">
-                              <p className="text-[10px] text-primary font-bold uppercase tracking-tighter">Recommended Next Step</p>
-                              <p className="text-lg font-bold text-white leading-tight">{aiSuggestion.suggestedAction}</p>
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                            <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2">
+                              <p className="text-[10px] text-primary font-bold uppercase tracking-tighter flex items-center gap-1.5">
+                                <ArrowRight className="w-3 h-3" /> Recommended Step
+                              </p>
+                              <p className="text-base font-bold text-white leading-tight">{aiSuggestion.suggestedAction}</p>
                             </div>
-                            <div className="p-4 rounded-xl bg-black/40 border border-white/5 shadow-inner">
-                              <p className="text-sm text-muted-foreground italic leading-relaxed">"{aiSuggestion.reasoning}"</p>
+                            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                              <p className="text-sm text-muted-foreground italic leading-relaxed font-medium">"{aiSuggestion.reasoning}"</p>
                             </div>
-                            <div className="flex items-center gap-6">
-                              <div className="flex-1 space-y-2">
-                                <div className="flex justify-between items-center">
-                                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Confidence Index</p>
-                                  <span className="text-xs font-bold text-primary">{aiSuggestion.confidenceScore}%</span>
-                                </div>
-                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                  <motion.div initial={{ width: 0 }} animate={{ width: `${aiSuggestion.confidenceScore}%` }} className="h-full bg-gradient-to-r from-primary/60 to-primary" />
-                                </div>
+                            <div className="space-y-2.5">
+                              <div className="flex justify-between items-center">
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Confidence Level</p>
+                                <span className="text-xs font-bold text-primary">{aiSuggestion.confidenceScore}%</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <motion.div initial={{ width: 0 }} animate={{ width: `${aiSuggestion.confidenceScore}%` }} className="h-full bg-gradient-to-r from-primary/60 to-primary" />
                               </div>
                             </div>
                           </motion.div>
                         ) : (
-                          <div className="h-full flex flex-col items-center justify-center py-10 text-center space-y-4">
-                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-dashed border-white/20">
-                                <Zap className="w-6 h-6 text-muted-foreground/40" />
-                            </div>
-                            <p className="text-sm text-muted-foreground/60 max-w-[200px] leading-relaxed">Click analysis to generate predictive lead closing strategies.</p>
+                          <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center space-y-4 border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
+                            <Zap className="w-8 h-8 text-muted-foreground/20" />
+                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Launch analysis to determine predictive sales strategies.</p>
                           </div>
                         )}
                       </AnimatePresence>
@@ -516,33 +519,36 @@ export default function LeadDetailPage() {
                   </div>
                 </GlassCard>
 
-                <GlassCard className="bg-indigo-500/[0.03] border-indigo-500/20">
+                {/* Contextual Brief */}
+                <GlassCard className="bg-indigo-500/[0.02] border-indigo-500/10">
                   <div className="p-8 h-full flex flex-col">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/20">
-                          <MessageSquare className="w-5 h-5" />
+                    <div className="flex items-start justify-between mb-8">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/20">
+                            <MessageSquare className="w-5 h-5" />
+                          </div>
+                          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Executive Brief</h3>
                         </div>
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Contextual Brief</h3>
+                        <p className="text-xs text-muted-foreground">Interaction history condensed</p>
                       </div>
-                      <Button size="sm" variant="ghost" className="h-9 px-4 text-xs font-bold uppercase tracking-widest bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/10 rounded-lg" onClick={handleGenerateSummary} disabled={isSummarizing}>
-                        {isSummarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : null}
-                        Summarize
+                      <Button size="sm" variant="ghost" className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/10 rounded-lg" onClick={handleGenerateSummary} disabled={isSummarizing}>
+                        {isSummarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
+                        Briefing
                       </Button>
                     </div>
                     
                     <div className="flex-1">
                       <AnimatePresence mode="wait">
                         {aiSummary ? (
-                          <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
+                          <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="p-6 rounded-xl bg-indigo-500/5 border border-indigo-500/10 relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/40" />
                             <p className="text-sm text-white/90 leading-relaxed font-medium">{aiSummary}</p>
                           </motion.div>
                         ) : (
-                          <div className="h-full flex flex-col items-center justify-center py-10 text-center space-y-4">
-                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-dashed border-white/20">
-                                <MessageSquare className="w-6 h-6 text-muted-foreground/40" />
-                            </div>
-                            <p className="text-sm text-muted-foreground/60 max-w-[200px] leading-relaxed">Condense months of interaction history into a quick briefing.</p>
+                          <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center space-y-4 border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
+                            <MessageSquare className="w-8 h-8 text-muted-foreground/20" />
+                            <p className="text-xs text-muted-foreground/60 max-w-[200px] leading-relaxed">Condense months of notes into a quick 30-second briefing.</p>
                           </div>
                         )}
                       </AnimatePresence>
@@ -551,61 +557,63 @@ export default function LeadDetailPage() {
                 </GlassCard>
               </div>
 
-              <GlassCard className="bg-emerald-500/[0.03] border-emerald-500/20">
+              {/* Email Outreach Draft */}
+              <GlassCard className="bg-emerald-500/[0.02] border-emerald-500/10">
                 <div className="p-8">
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">
-                        <PenTool className="w-5 h-5" />
+                  <div className="flex items-start justify-between mb-8">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">
+                          <PenTool className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Outreach Assistant</h3>
                       </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Email Outreach Draft</h3>
-                        <p className="text-xs text-muted-foreground mt-1">AI-generated personalized engagement template</p>
-                      </div>
+                      <p className="text-xs text-muted-foreground">Draft contextually personalized engagement</p>
                     </div>
                     <Button 
                       size="sm" 
                       variant="ghost" 
-                      className="h-9 px-4 text-xs font-bold uppercase tracking-widest bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/10 rounded-lg" 
+                      className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/10 rounded-lg" 
                       onClick={handleGenerateDraft} 
                       disabled={isDrafting}
                     >
-                      {isDrafting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : null}
+                      {isDrafting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
                       Draft Email
                     </Button>
                   </div>
 
                   <AnimatePresence mode="wait">
                     {aiDraft ? (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/5">
+                      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                        <div className="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/5 group">
                           <div className="flex-1">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Subject Line</p>
-                            <p className="text-sm text-white font-medium">{aiDraft.subject}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Subject</p>
+                            <p className="text-sm text-white font-bold">{aiDraft.subject}</p>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-emerald-400" onClick={() => copyToClipboard(aiDraft.subject)}>
-                            <Copy className="w-3.5 h-3.5" />
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-all" onClick={() => copyToClipboard(aiDraft.subject)}>
+                            <Copy className="w-4 h-4" />
                           </Button>
                         </div>
                         <div className="relative group">
-                          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-emerald-400 bg-black/40" onClick={() => copyToClipboard(aiDraft.body)}>
-                              <Copy className="w-3.5 h-3.5" />
+                          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-emerald-400 bg-black/60 rounded-lg" onClick={() => copyToClipboard(aiDraft.body)}>
+                              <Copy className="w-4 h-4" />
                             </Button>
                           </div>
                           <Textarea 
                             readOnly 
                             value={aiDraft.body} 
-                            className="bg-black/40 border-white/5 min-h-[250px] resize-none text-sm text-white/90 leading-relaxed font-medium p-6 rounded-xl"
+                            className="bg-black/40 border-white/5 min-h-[300px] resize-none text-sm text-white/90 leading-relaxed font-medium p-8 rounded-xl ring-0 focus-visible:ring-0"
                           />
                         </div>
                       </motion.div>
                     ) : (
-                      <div className="py-20 text-center space-y-4 border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-dashed border-white/20 mx-auto">
-                            <Mail className="w-6 h-6 text-muted-foreground/40" />
+                      <div className="py-24 text-center space-y-5 border border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
+                        <Mail className="w-10 h-10 text-muted-foreground/15 mx-auto" />
+                        <div className="space-y-1">
+                          <p className="text-sm text-white/40 font-bold">No draft generated</p>
+                          <p className="text-xs text-muted-foreground/50 max-w-[300px] mx-auto leading-relaxed">Personalize your outreach using the lead's unique journey and current stage.</p>
                         </div>
-                        <p className="text-sm text-muted-foreground/60 max-w-[280px] mx-auto leading-relaxed">Generate a context-aware follow-up email tailored to this lead's current pipeline status.</p>
                       </div>
                     )}
                   </AnimatePresence>
@@ -615,28 +623,28 @@ export default function LeadDetailPage() {
           </Tabs>
         </div>
 
-        <aside className="lg:col-span-4 space-y-6">
-          <GlassCard className="h-auto">
-            <div className="p-6 space-y-8">
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                <Badge variant="outline" className="w-2.5 h-2.5 rounded-full p-0 bg-primary border-none shadow-sm shadow-primary/40 animate-pulse" />
+        <aside className="lg:col-span-4 space-y-8 sticky top-24">
+          <GlassCard>
+            <div className="p-8 space-y-8">
+              <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 Pipeline Metadata
               </h3>
               
-              <div className="space-y-5">
-                <div className="flex justify-between items-center group">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider group-hover:text-white transition-colors">Stage</span>
-                    <p className="text-xs text-white/60">Current progress</p>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Stage</span>
+                    <p className="text-xs text-white/60">Pipeline progress</p>
                   </div>
                   <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary font-bold px-3 py-1 rounded-lg">{lead.status}</Badge>
                 </div>
                 
                 <Separator className="bg-white/5" />
 
-                <div className="flex justify-between items-center group">
+                <div className="flex justify-between items-center">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider group-hover:text-white transition-colors">Priority</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Priority</span>
                     <p className="text-xs text-white/60">Inquiry urgency</p>
                   </div>
                   <Badge variant="outline" className="border-red-500/20 bg-red-500/10 text-red-400 font-bold px-3 py-1 rounded-lg">{lead.priority}</Badge>
@@ -644,42 +652,55 @@ export default function LeadDetailPage() {
 
                 <Separator className="bg-white/5" />
 
-                <div className="flex justify-between items-center group">
+                <div className="flex justify-between items-center">
                    <div className="space-y-0.5">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider group-hover:text-white transition-colors">Source</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Source</span>
                     <p className="text-xs text-white/60">Initial channel</p>
                   </div>
                   <span className="text-xs text-white font-bold bg-white/5 px-3 py-1 rounded-lg border border-white/10">{lead.source}</span>
                 </div>
               </div>
 
-              <div className="pt-4 space-y-4">
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5">
+              <div className="pt-4">
+                <div className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5">
                   <Calendar className="w-5 h-5 text-muted-foreground" />
                   <div className="flex-1">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Record Created</p>
-                    <p className="text-sm text-white font-semibold">{new Date(lead.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}</p>
+                    <p className="text-sm text-white font-bold">{new Date(lead.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}</p>
                   </div>
                 </div>
               </div>
             </div>
           </GlassCard>
 
-          <GlassCard className="bg-gradient-to-br from-indigo-500/10 to-transparent border-indigo-500/20">
-            <div className="p-6 space-y-4">
-              <h3 className="font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-400" />
-                Nurture Assistant
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Need help closing this lead? The AI Insights tab uses interaction history to suggest communication strategies and draft personalized emails.
-              </p>
-              <div className="flex items-center gap-2 text-indigo-400 font-bold text-[10px] uppercase tracking-widest">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                Powered by Gemini 2.5
-              </div>
-            </div>
-          </GlassCard>
+          <AnimatePresence>
+            {activeTab === 'intelligence' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="space-y-6"
+              >
+                <GlassCard className="bg-gradient-to-br from-indigo-500/10 to-transparent border-indigo-500/20 shadow-indigo-500/5">
+                  <div className="p-8 space-y-4">
+                    <h3 className="font-bold text-white flex items-center gap-3">
+                      <Sparkles className="w-5 h-5 text-indigo-400" />
+                      Nurture Assistant
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                      The AI Insight suite uses this lead's interaction history and metadata to generate winning strategies. Every analysis helps refine the next suggested step.
+                    </p>
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/10">
+                      <Info className="w-4 h-4 text-indigo-400 shrink-0" />
+                      <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-normal">
+                        Powered by Gemini 2.5 Flash
+                      </p>
+                    </div>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </aside>
       </div>
     </div>
