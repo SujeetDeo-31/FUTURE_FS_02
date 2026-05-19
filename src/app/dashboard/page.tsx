@@ -12,7 +12,8 @@ import {
   Database,
   Filter,
   ChevronRight,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,8 +40,11 @@ import { GlassCard } from "@/components/shared/glass-card";
 import { useCRMStats, TimeRange } from "@/hooks/use-crm-stats";
 import { LeadService } from "@/services/lead-service";
 import { AccountService } from "@/services/account-service";
+import { ReportService } from "@/services/report-service";
+import { generateAiReport } from "@/ai/flows/ai-generate-report";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const COLORS = ["#8b5cf6", "#a78bfa", "#6366f1", "#4f46e5", "#3b82f6", "#10b981"];
 
@@ -53,6 +57,7 @@ const RANGE_LABELS: Record<TimeRange, string> = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [range, setRange] = useState<TimeRange>('30d');
   const { stats, leads, loading, refresh } = useCRMStats(range);
   const { toast } = useToast();
@@ -69,16 +74,36 @@ export default function DashboardPage() {
   };
 
   const handleGenerateReport = async () => {
+    if (!stats) return;
     setIsGenerating(true);
     try {
-      // Deduct Credits (25 for full report generation)
+      // Deduct Credits
       await AccountService.deductCredits(25);
       
+      // Call AI to analyze stats
+      const aiReport = await generateAiReport({
+        totalLeads: stats.totalLeads,
+        conversionRate: stats.conversionRate,
+        statusBreakdown: stats.statusBreakdown,
+        sourceBreakdown: stats.sourceBreakdown,
+      });
+
+      // Save to database
+      await ReportService.saveReport({
+        ...aiReport,
+        statsSnapshot: {
+          totalLeads: stats.totalLeads,
+          conversionRate: stats.conversionRate,
+          activeLeads: stats.totalLeads - (stats.statusBreakdown['Lost'] || 0),
+        }
+      });
+
       toast({ 
         title: "Report Generated", 
         description: "Your intelligent pipeline analysis is ready. (25 AI Credits used)" 
       });
-      // In a real app, this would trigger a download or PDF generation
+      
+      router.push('/reports');
     } catch (error: any) {
       toast({ 
         title: "Action Failed", 
@@ -144,10 +169,10 @@ export default function DashboardPage() {
           <Button 
             onClick={handleGenerateReport}
             disabled={isGenerating}
-            className="h-10 px-5 bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20"
+            className="h-10 px-5 bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 gap-2"
           >
-            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Generate Report
+            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            Generate AI Report
           </Button>
         </div>
       </header>
@@ -227,7 +252,7 @@ export default function DashboardPage() {
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
-          </GlassCard>
+          </AreaChart>
         </div>
 
         <div>
